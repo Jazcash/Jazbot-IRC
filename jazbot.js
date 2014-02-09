@@ -1,10 +1,12 @@
 // IMPORTS
-// irc requires node-irc (npm -g install irc)
-var irc = require('irc');
-var colours = irc.colors.codes
-
-var sys = require('sys')
+var sys = require('sys') 
 var exec = require('child_process').exec;
+var fs = require('fs');
+var irc = require('irc'); // npm install irc
+var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
+
+// GLOBAL VARIABLES
+var colours = irc.colors.codes
 
 // String formatting (String.format('{0} is dead, but {1} is alive! {0} {2}', 'ASP', 'ASP.NET')
 if (!String.format) {
@@ -69,6 +71,37 @@ bot.addListener('message', function (from, to, message) {
 						bot.say(to, output[i]);
 					}
 				});
+			case "setpass":
+				var hash = bcrypt.hashSync(args[0]);
+				if (!fs.existsSync("passhash")){
+					fs.writeFile("passhash", hash, function(err) {
+					    if(err) {
+					        console.log(err);
+					    } else {
+					        bot.say(to, "The file was saved!");
+					    }
+					}); 
+				} else {
+					bot.say(to, "Pass is already set!");
+				}
+				break;
+			case "checkpass":
+				if (fs.existsSync("passhash") && args[0]){
+					fs.readFile('passhash', "utf-8", function (err, data) {
+						if (err){ throw err; }
+						var pass = args[0];
+						if (bcrypt.compareSync(pass, data)){
+							bot.say(to, colours["light_green"]+"Password Valid - User "+from+" is now the authenticated operator");
+						} else {
+							bot.say(to, "Password Invalid!");
+						}
+					});
+				} else if (!fs.existsSync("passhash")){
+					bot.say(to, "Pass isn't set!");
+				} else {
+					bot.say(to, "You must provide the password");
+				}
+				break;
    			default:
    				break;
    		}
