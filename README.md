@@ -1,0 +1,4 @@
+Jazbot
+======
+
+My IRC bot!
