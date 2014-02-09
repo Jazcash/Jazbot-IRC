@@ -3,6 +3,9 @@
 var irc = require('irc');
 var colours = irc.colors.codes
 
+var sys = require('sys')
+var exec = require('child_process').exec;
+
 // String formatting (String.format('{0} is dead, but {1} is alive! {0} {2}', 'ASP', 'ASP.NET')
 if (!String.format) {
   String.format = function(format) {
@@ -58,6 +61,14 @@ bot.addListener('message', function (from, to, message) {
 	   				}
    				}
    				break;
+   			case "ls":
+				var output = ""
+				exec("dir", function(error, stdout, stderr){
+					output = stdout.split("\r\n")
+					for (var i=0; i<output.length; i++){
+						bot.say(to, output[i]);
+					}
+				});
    			default:
    				break;
    		}
