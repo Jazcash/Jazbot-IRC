@@ -1,6 +1,13 @@
 Jazbot
 ======
 
-My IRC bot!
+My Node-JS IRC bot!
 
-Requires NodeJS and node-irc
+##Dependencies
+
+* node-irc `npm install irc`
+* bcrypt-nodejs `npm install bcrypt-nodejs`
+
+##Usage
+
+`node jazbot.js`
