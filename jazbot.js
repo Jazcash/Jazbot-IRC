@@ -1,18 +1,26 @@
 // IMPORTS
-	var sys = require('sys') 
-	var exec = require('child_process').exec;
-	var fs = require('fs');
-	var irc = require('irc'); // npm install irc
-	var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
+var sys = require('sys') 
+var exec = require('child_process').exec;
+var fs = require('fs');
+var irc = require('irc'); // npm install irc
+var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
+// My imports
+var Server = require("./server.js");
+var Channel = require("./channel.js");
+var User = require("./user.js");
 
 // GLOBAL VARIABLES
-	var colours = irc.colors.codes
+var colours = irc.colors.codes
 	/* COLOURS 
 		white, black, dark_blue, dark_green, light_red, dark_red, magenta, orange, 
 		yellow, light_green, cyan, light_cyan, light_blue, light_magenta, gray, light_gray, reset
 	*/
+// Session variables
+var owner; // username of the bot's owner for current session
+var auth = false; // is an owner auth'd?
 
 // String formatting (String.format('{0} is dead, but {1} is alive! {0} {2}', 'ASP', 'ASP.NET')
+// Gives "ASP is dead, but ASP.NET is alive! ASP {2}"
 if (!String.format) {
   String.format = function(format) {
     var args = Array.prototype.slice.call(arguments, 1);
@@ -27,17 +35,14 @@ if (!String.format) {
 
 // Create bot
 var bot = new irc.Client('irc.w3.org', 'Jazbot', {
-    channels: ['#ectest'],
+    channels: ['#ectest2 test'], // pass for #ectest is fish
 });
-
-// Session variables
-var owner;
-var auth = false;
 
 // On message event
 bot.addListener('message', function (from, to, message) {
+	console.log(message);
 	if (to == "Jazbot"){
-		to = from;	
+		to = from;	// if message sent directly to bot, set 'to' to the username
 	}
 	if (message[0] == "!"){
    		var temp = message.split(" ");
@@ -140,6 +145,13 @@ bot.addListener('message', function (from, to, message) {
 					bot.say(to, colours["light_red"]+"You must provide the password");
 				}
 				break;
+			//case "xkcd":
+			//	if (owner == from){
+			//		for (var i=1; i<1329; i++){
+			//			bot.say(to, "https://xkcd.com/"+i+"/");
+			//		}
+			//	}
+			//	break;
    			default:
    				break;
    		}
