@@ -1,40 +1,95 @@
-// IMPORTS
-var sys = require('sys') 
+var factory = require('irc-factory'); // this should be 'irc-factory' in your project
+var sys = require('sys');
 var exec = require('child_process').exec;
 var fs = require('fs');
-var irc = require('irc'); // npm install irc
 var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
-// My imports - Unused atm
-//var Server = require("./server.js");
-//var Channel = require("./channel.js");
-//var User = require("./user.js");
 
-// GLOBAL VARIABLES
-var colours = irc.colors.codes
-	/* COLOURS 
-		white, black, dark_blue, dark_green, light_red, dark_red, magenta, orange, 
-		yellow, light_green, cyan, light_cyan, light_blue, light_magenta, gray, light_gray, reset
-	*/
+col = {
+    white:"\x030",
+    black:"\x031",
+    darkBlue:"\x032",
+    darkGreen:"\x033",
+    red:"\x034",
+    darkRed:"\x035",
+    darkViolet:"\x036",
+    orange:"\x037",
+    yellow:"\x038",
+    lightGreen:"\x039",
+    cyan:"\x0310",
+    lightCyan:"\x0311",
+    blue:"\x0312",
+    pink:"\x0313",
+    darkGrey:"\x0314",
+    lightGrey:"\x0315" 
+};
 
-// SESSION VARIABLES
+sty = {
+    bold: "\x02",
+    colour: "\x03",
+    italic: "\x09",
+    strikeThrough: "\x13",
+    reset:"\x0f",
+    underline:"\x15",
+    underline2: "\x1f",
+    reverse: "\x16"
+};
+
 var owner = false; // username of the bot's owner for current session
+var vote = {
+	name: "",
+	opt1: 0,
+	opt2: 0,
+	total: 0
+}
 
-// Create bot
-var server = "irc.w3.org";
-var botname = "Jazbot";
+api = new factory.Api();
 
-var bot = new irc.Client(server, botname, {
-    channels: ["#ectest2 test"]
+var client = api.createClient('test', {
+	nick : 'Jazbot',
+	user : 'Jazbot',
+	server : 'irc.w3.org',
+	realname: 'Jazbot',
+	port: 6667,
+	secure: false
 });
 
-// On message event
-bot.addListener('message', function(from, to, message) {
-	console.log(message); // Debugging
+api.hookEvent('*', 'registered', function(message) {
+	client.irc.join('#ectest2', 'testy2');
+});
+
+api.hookEvent('*', 'privmsg', function(message) {
+	var from = message.nickname;
+	var to = message.target;
+	var message = message.message;
+	console.log(message);
+	function cmdHandler(params){
+		// if params not supplied, default command is executable anywhere, by anybody
+		var cmdFunc = (params.cmd === undefined) ? function(){console.log("You must pass a function as a value for the 'cmd' key!")} : params.cmd;
+		var authRequired = (params.authRequired === undefined) ? false : params.authRequired; // does cmd require auth?
+		var userHasAuth = (from == owner) ? true : false; // does user have auth?
+		var where = (params.where === undefined) ? "anywhere" : params.where; // where is cmd executable?
+		var loc = (pm) ? from : to; // where to send response
+		
+		if (where == "pm_only" && !pm){ // not allowed
+			client.irc.privmsg(loc, "That command can only be used in a private message to me");
+		} else if(where == "channel_only" && pm){ // not allowed
+			client.irc.privmsg(loc, "That command can only be used in a channel I am in");
+		} else {
+			if (authRequired && userHasAuth){ // allowed
+				cmdFunc(loc);
+			} else if(authRequired && !userHasAuth){ // now allowed
+				client.irc.privmsg(loc, "You need to be owner to do that");
+			} else if(!authRequired){ // allowed
+				cmdFunc(loc);
+			}
+		}
+	}
 	var pm = false;
-	if (to == botname){
+	if (to == client.irc.nick){
 		//to = from;	// if message sent directly to bot, set 'to' to the username
 		pm = true;
 	}
+	//console.log(pm);
 	if (message[0] == "!"){
    		var temp = message.split(" ");
    		var cmd = temp[0].substring(1)
@@ -44,60 +99,22 @@ bot.addListener('message', function(from, to, message) {
 		console.log("msg "+message);
 		console.log("owner: "+owner);
 		console.log("==============================");*/
-		function cmdHandler(params, cmdFunc){
-			var a = (params.a === undefined) ? "default value" : params.a /* If undefined, set default value */,
-			var b = (params.b === undefined) ? "default value" : params.b /* If undefined, set default value */,
-			switch(location){
-				case "pm":
-					if (authRequired && from == owner){
-						cmdFunc(from);	
-					} else (authRequired && from !== owner){
-						bot.say(from, "You can't do that!");
-					} else {
-						cmdFunc(from);	
-					}
-					break;
-				case "channel":
-					if (authRequired && from == owner){
-						cmdFunc(to);	
-					} else (authRequired && from !== owner){
-						bot.say(to, "You can't do that"+from+"!");
-					} else {
-						cmdFunc(to);
-					}
-					break;
-				case "all":
-					if (authRequired && from == owner){
-						cmdFunc(from);	
-					} else (authRequired && from !== owner){
-						bot.say(from, "You can't do that!");
-					} else {
-						cmdFunc(from);
-					}
-					break;
-				default:
-					break;
-			}
-		}
+
 		switch (cmd){
 			case "testCmd":
-				cmdHandler({where:"all", authRequired:true}, function(loc){
-					bot.say(loc, "Hello!");
-				});
+				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
+					client.irc.privmsg(loc, "Hello!");
+				}});
 				break;	
-			default: 
-				break;
-		}
-		if (pm == true){
-			switch (cmd){
-				case "setpass":
+			case "setpass":
+				cmdHandler({where: "pm_only", authRequired:false, cmd:function(loc){
 					var hash = bcrypt.hashSync(args[0]);
 					if (!fs.existsSync("passhash") && !owner){
 						fs.writeFile("passhash", hash, function(err) {
 							if(err) {
 								console.log(err);
 							} else {
-								bot.say(to, colours["light_green"]+"The file was saved successfully");
+								client.irc.privmsg(loc, col["lightGreen"]+"The file was saved successfully");
 							}
 						});
 					} else if(from == owner){
@@ -105,44 +122,45 @@ bot.addListener('message', function(from, to, message) {
 							if(err) {
 								console.log(err);
 							} else {
-								bot.say(to, colours["light_green"]+"The file was saved successfully");
+								client.irc.privmsg(loc, col["lightGreen"]+"The file was saved successfully");
 							}
 						});
 					} else {
-						bot.say(to, colours["light_red"]+"Pass is already set");
+						client.irc.privmsg(loc, col["pink"]+"Pass is already set");
 					}
-					break;
-				case "auth":
+				}});
+				break;
+			case "auth":
+				cmdHandler({where: "pm_only", authRequired:false, cmd:function(loc){
 					if (fs.existsSync("passhash") && args[0] && !owner){
 						fs.readFile('passhash', "utf-8", function (err, data) {
 							if (err){ throw err; }
 							var pass = args[0];
 							if (bcrypt.compareSync(pass, data)){
-								bot.say(to, colours["light_green"]+"Password Valid - User "+from+" is now the authenticated operator");
+								client.irc.privmsg(loc, col["lightGreen"]+"Password Valid - User "+from+" is now the authenticated operator");
 								owner = from;
 							} else {
-								bot.say(to, colours["light_red"]+"Password Invalid");
+								client.irc.privmsg(loc, col["pink"]+"Password Invalid");
 							}
 						});
 					} else if (from == owner){
-						bot.say(to, colours["light_red"]+"You are already the owner!");
+						client.irc.privmsg(loc, col["pink"]+"You are already the owner!");
 					} else if (owner){
-						bot.say(to, colours["light_red"]+"An owner has already been set");
+						client.irc.privmsg(loc, col["pink"]+"An owner has already been set");
 					} else if (!fs.existsSync("passhash")){
-						bot.say(to, colours["light_red"]+"Pass isn't set");
+						client.irc.privmsg(loc, col["pink"]+"Pass isn't set");
 					} else {
-						bot.say(to, colours["light_red"]+"You must provide the password");
+						client.irc.privmsg(loc, col["pink"]+"You must provide the password");
 					}
-					break;
-				default:
-					break;
-			}
-		} else {
-			switch (cmd){
-				case "hi":
-					bot.say(to, colours["cyan"]+"Hello "+from+"!");
-					break;
-				case "leave":
+				}});
+				break;
+			case "hi":
+				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					client.irc.privmsg(loc, col["cyan"]+"Hello "+from+"!");
+				}});
+				break;
+			case "leave":
+				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
 					if (args.length == 0){ args[0] = to; }
 					for (var i=0; i<args.length; i++){
 						var channel = args[i]
@@ -155,8 +173,10 @@ bot.addListener('message', function(from, to, message) {
 							console.log(e)
 						}
 					}
-					break;
-				case "join":
+				}});
+				break;
+			case "join":
+				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
 					if (args.length > 0){
 						for (var i=0; i<args.length; i++){
 							var channel = args[i]
@@ -170,10 +190,12 @@ bot.addListener('message', function(from, to, message) {
 							}
 						}
 					} else {
-						bot.say(to, colours["dark_red"]+"You must provide a channel to join");	
+						client.irc.privmsg(loc, col["darkRed"]+"You must provide a channel to join");	
 					}
-					break;
-				case "exec":
+				}});
+				break;
+			case "exec":
+				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
 					if (owner == from && args.length > 0){
 						var output = ""
 						var str = args.join(' ');
@@ -182,35 +204,76 @@ bot.addListener('message', function(from, to, message) {
 							output = JSON.stringify(stdout);//stdout.replace('\n', '\\n');
 							output = output.substring(1, output.length-1);
 							output = output.split('\\n');
-							bot.say(to, colours["orange"]+"PMing the output to "+from);
+							//client.irc.privmsg(loc, col["orange"]+"PMing the output to "+from);
 							if (output.length > 50){
-								bot.say(to, colours["dark_red"]+"No can do - Output is more than 50 lines long");							
+								client.irc.privmsg(loc, col["darkRed"]+"No can do - Output is more than 50 lines long");							
 							} else {
 								for (var i=0; i<output.length-1; i++){
-									bot.say(from, colours["light_gray"]+output[i]);
+									client.irc.privmsg(loc, col["lightGrey"]+output[i]);
 								}
 							}
 						});
 					} else if(owner == from && args.length == 0){
-						bot.say(to, colours["dark_red"]+"You must provide a command");
+						client.irc.privmsg(loc, col["darkRed"]+"You must provide a command");
 					} else {
-						bot.say(to, colours["light_red"]+"You must be owner to do that");
+						client.irc.privmsg(loc, col["pink"]+"You must be owner to do that");
+					}					
+				}});
+				break;
+			case "xkcd":
+				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
+					var loc = (args[0] === undefined) ? loc : args[0];
+					if (owner == from){
+						for (var i=1; i<10; i++){
+							client.irc.privmsg(loc, "https://xkcd.com/"+i+"/");
+						}
 					}
-					break;
-				//case "xkcd":
-				//	if (owner == from){
-				//		for (var i=1; i<1329; i++){
-				//			bot.say(to, "https://xkcd.com/"+i+"/");
-				//		}
-				//	}
-				//	break;
-				default:
-					break;
-			}
+				}});
+				break;
+			case "callvote":
+				cmdHandler({where: "channel_only", authRequired:false, cmd:function(loc){
+					if (args[0]){
+						vote.name = args[0];
+						//vote.total = 
+					} else {
+						client.irc.privmsg(loc, "You must state what you wish to vote on!");
+					}
+				}});
+				break;
+			case "vote":
+				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					if (args[0]){
+						if (args[0] == "y"){
+							
+						} else if(agrs[0] == "n"){
+							
+						} else {
+							client.irc.privmsg(loc, "You must say state y or n");
+						}
+						vote.name = args[0];
+					} else {
+						client.irc.privmsg(loc, "You must state which option you wish to vote for!");
+					}
+				}});
+				break;
+			case "chan":
+				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					bot.list(["#ectest2"]);
+					bot.send("LIST #ectest2");
+				}});
+				break;
+			default:
+				break;
 		}
 	}
 });
-// Uncomment this to keep errors from crashing the bot
-//bot.addListener('error', function(message) {
-//    console.log('error: ', message);
-//});
+
+/*api.hookEvent('*', 'privmsg', function(message) {
+	console.log(message.message);
+	client.irc.raw('LIST', '#ectest2');
+});
+
+api.hookEvent('*', 'list', function(message) {
+	console.log(message.list[0].users);
+	//client.irc.privmsg('#ectest2', 'hey this is a test');
+});*/
