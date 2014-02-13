@@ -39,7 +39,7 @@ var vote = {
 	name: "",
 	opt1: 0,
 	opt2: 0,
-	total: 0
+	voters: 0
 }
 
 api = new factory.Api();
@@ -54,7 +54,7 @@ var client = api.createClient('test', {
 });
 
 api.hookEvent('*', 'registered', function(message) {
-	client.irc.join('#ectest2', 'testy2');
+	client.irc.join('#ec', 'testy2');
 });
 
 api.hookEvent('*', 'privmsg', function(message) {
@@ -168,7 +168,7 @@ api.hookEvent('*', 'privmsg', function(message) {
 							channel = "#" + channel
 						}
 						try{
-							bot.part(channel)
+							client.irc.part(channel);
 						} catch (e){
 							console.log(e)
 						}
@@ -184,7 +184,7 @@ api.hookEvent('*', 'privmsg', function(message) {
 								channel = "#" + channel
 							}
 							try{
-								bot.join(channel)
+								client.irc.join(channel);
 							} catch (e){
 								console.log(e)
 							}
@@ -233,8 +233,8 @@ api.hookEvent('*', 'privmsg', function(message) {
 			case "callvote":
 				cmdHandler({where: "channel_only", authRequired:false, cmd:function(loc){
 					if (args[0]){
-						vote.name = args[0];
-						//vote.total = 
+						vote.name = args.join(" ");
+						client.irc.raw('LIST', loc);
 					} else {
 						client.irc.privmsg(loc, "You must state what you wish to vote on!");
 					}
@@ -242,24 +242,26 @@ api.hookEvent('*', 'privmsg', function(message) {
 				break;
 			case "vote":
 				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					if (args[0]){
+					if ((vote.opt1 < vote.voters-1) && (vote.opt2 < vote.voters-1)){
 						if (args[0] == "y"){
-							
-						} else if(agrs[0] == "n"){
-							
+							vote.opt1 = vote.opt1+1;
+							client.irc.privmsg(loc, vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
+						} else if(args[0] == "n"){
+							vote.opt2 = vote.opt2+1;
+							client.irc.privmsg(loc, vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
 						} else {
 							client.irc.privmsg(loc, "You must say state y or n");
 						}
 						vote.name = args[0];
-					} else {
-						client.irc.privmsg(loc, "You must state which option you wish to vote for!");
+					} else if (args[0] && vote.name == "") {
+						client.irc.privmsg(loc, "Currently no vote in progress");
+					} else{
+						client.irc.privmsg(loc, "Vote passed! Majority voted in favour of "+vote.name);
+						vote.opt1 = 0;
+						vote.op2 = 0;
+						vote.name = ""
+						vote.voters = 0;
 					}
-				}});
-				break;
-			case "chan":
-				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					bot.list(["#ectest2"]);
-					bot.send("LIST #ectest2");
 				}});
 				break;
 			default:
@@ -268,12 +270,8 @@ api.hookEvent('*', 'privmsg', function(message) {
 	}
 });
 
-/*api.hookEvent('*', 'privmsg', function(message) {
-	console.log(message.message);
-	client.irc.raw('LIST', '#ectest2');
-});
-
 api.hookEvent('*', 'list', function(message) {
-	console.log(message.list[0].users);
+	vote.voters = message.list[0].users-1;
+	client.irc.privmsg("#ec", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
 	//client.irc.privmsg('#ectest2', 'hey this is a test');
-});*/
+});
