@@ -1,0 +1,27 @@
+module.exports = {
+    white:"\x030",
+    black:"\x031",
+    darkBlue:"\x032",
+    darkGreen:"\x033",
+    red:"\x034",
+    darkRed:"\x035",
+    darkViolet:"\x036",
+    orange:"\x037",
+    yellow:"\x038",
+    lightGreen:"\x039",
+    cyan:"\x0310",
+    lightCyan:"\x0311",
+    blue:"\x0312",
+    pink:"\x0313",
+    darkGrey:"\x0314",
+    lightGrey:"\x0315",
+	
+    bold: "\x02",
+    colour: "\x03",
+    italic: "\x09",
+    strikeThrough: "\x13",
+    reset:"\x0f",
+    underline:"\x15",
+    underline2: "\x1f",
+    reverse: "\x16"
+}

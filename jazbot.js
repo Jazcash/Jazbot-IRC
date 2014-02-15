@@ -1,38 +1,10 @@
-var factory = require('irc-factory'); // this should be 'irc-factory' in your project
+"use strict";
 var sys = require('sys');
 var exec = require('child_process').exec;
 var fs = require('fs');
+var factory = require('irc-factory'); // npm install irc-factory
 var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
-
-col = {
-    white:"\x030",
-    black:"\x031",
-    darkBlue:"\x032",
-    darkGreen:"\x033",
-    red:"\x034",
-    darkRed:"\x035",
-    darkViolet:"\x036",
-    orange:"\x037",
-    yellow:"\x038",
-    lightGreen:"\x039",
-    cyan:"\x0310",
-    lightCyan:"\x0311",
-    blue:"\x0312",
-    pink:"\x0313",
-    darkGrey:"\x0314",
-    lightGrey:"\x0315" 
-};
-
-sty = {
-    bold: "\x02",
-    colour: "\x03",
-    italic: "\x09",
-    strikeThrough: "\x13",
-    reset:"\x0f",
-    underline:"\x15",
-    underline2: "\x1f",
-    reverse: "\x16"
-};
+var col = require('./colors.js');
 
 var owner = false; // username of the bot's owner for current session
 var vote = {
@@ -40,9 +12,9 @@ var vote = {
 	opt1: 0,
 	opt2: 0,
 	voters: 0
-}
+};
 
-api = new factory.Api();
+var api = new factory.Api();
 
 var client = api.createClient('test', {
 	nick : 'Jazbot',
@@ -54,14 +26,15 @@ var client = api.createClient('test', {
 });
 
 api.hookEvent('*', 'registered', function(message) {
-	client.irc.join('#ec', 'testy2');
+	client.irc.join('#ectest2', 'testy2');
 });
 
 api.hookEvent('*', 'privmsg', function(message) {
 	var from = message.nickname;
 	var to = message.target;
 	var message = message.message;
-	console.log(message);
+	console.log(message); // Shows every IRC message the bot sees in the console
+	
 	function cmdHandler(params){
 		// if params not supplied, default command is executable anywhere, by anybody
 		var cmdFunc = (params.cmd === undefined) ? function(){console.log("You must pass a function as a value for the 'cmd' key!")} : params.cmd;
@@ -272,6 +245,6 @@ api.hookEvent('*', 'privmsg', function(message) {
 
 api.hookEvent('*', 'list', function(message) {
 	vote.voters = message.list[0].users-1;
-	client.irc.privmsg("#ec", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
+	client.irc.privmsg("#ectest2", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
 	//client.irc.privmsg('#ectest2', 'hey this is a test');
 });
