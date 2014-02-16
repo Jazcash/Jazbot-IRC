@@ -4,7 +4,7 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var factory = require('irc-factory'); // npm install irc-factory
 var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
-var col = require('./colors.js');
+var style = require('./styles.js');
 
 var owner = false; // username of the bot's owner for current session
 var vote = {
@@ -87,7 +87,7 @@ api.hookEvent('*', 'privmsg', function(message) {
 							if(err) {
 								console.log(err);
 							} else {
-								client.irc.privmsg(loc, col["lightGreen"]+"The file was saved successfully");
+								client.irc.privmsg(loc, style["lightGreen"]+"The file was saved successfully");
 							}
 						});
 					} else if(from == owner){
@@ -95,11 +95,11 @@ api.hookEvent('*', 'privmsg', function(message) {
 							if(err) {
 								console.log(err);
 							} else {
-								client.irc.privmsg(loc, col["lightGreen"]+"The file was saved successfully");
+								client.irc.privmsg(loc, style["lightGreen"]+"The file was saved successfully");
 							}
 						});
 					} else {
-						client.irc.privmsg(loc, col["pink"]+"Pass is already set");
+						client.irc.privmsg(loc, style["pink"]+"Pass is already set");
 					}
 				}});
 				break;
@@ -110,26 +110,26 @@ api.hookEvent('*', 'privmsg', function(message) {
 							if (err){ throw err; }
 							var pass = args[0];
 							if (bcrypt.compareSync(pass, data)){
-								client.irc.privmsg(loc, col["lightGreen"]+"Password Valid - User "+from+" is now the authenticated operator");
+								client.irc.privmsg(loc, style["lightGreen"]+"Password Valid - User "+from+" is now the authenticated operator");
 								owner = from;
 							} else {
-								client.irc.privmsg(loc, col["pink"]+"Password Invalid");
+								client.irc.privmsg(loc, style["pink"]+"Password Invalid");
 							}
 						});
 					} else if (from == owner){
-						client.irc.privmsg(loc, col["pink"]+"You are already the owner!");
+						client.irc.privmsg(loc, style["pink"]+"You are already the owner!");
 					} else if (owner){
-						client.irc.privmsg(loc, col["pink"]+"An owner has already been set");
+						client.irc.privmsg(loc, style["pink"]+"An owner has already been set");
 					} else if (!fs.existsSync("passhash")){
-						client.irc.privmsg(loc, col["pink"]+"Pass isn't set");
+						client.irc.privmsg(loc, style["pink"]+"Pass isn't set");
 					} else {
-						client.irc.privmsg(loc, col["pink"]+"You must provide the password");
+						client.irc.privmsg(loc, style["pink"]+"You must provide the password");
 					}
 				}});
 				break;
 			case "hi":
 				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					client.irc.privmsg(loc, col["cyan"]+"Hello "+from+"!");
+					client.irc.privmsg(loc, style["cyan"]+"Hello "+from+"!");
 				}});
 				break;
 			case "leave":
@@ -163,7 +163,7 @@ api.hookEvent('*', 'privmsg', function(message) {
 							}
 						}
 					} else {
-						client.irc.privmsg(loc, col["darkRed"]+"You must provide a channel to join");	
+						client.irc.privmsg(loc, style["darkRed"]+"You must provide a channel to join");	
 					}
 				}});
 				break;
@@ -177,19 +177,19 @@ api.hookEvent('*', 'privmsg', function(message) {
 							output = JSON.stringify(stdout);//stdout.replace('\n', '\\n');
 							output = output.substring(1, output.length-1);
 							output = output.split('\\n');
-							//client.irc.privmsg(loc, col["orange"]+"PMing the output to "+from);
+							//client.irc.privmsg(loc, style["orange"]+"PMing the output to "+from);
 							if (output.length > 50){
-								client.irc.privmsg(loc, col["darkRed"]+"No can do - Output is more than 50 lines long");							
+								client.irc.privmsg(loc, style["darkRed"]+"No can do - Output is more than 50 lines long");							
 							} else {
 								for (var i=0; i<output.length-1; i++){
-									client.irc.privmsg(loc, col["lightGrey"]+output[i]);
+									client.irc.privmsg(loc, style["lightGrey"]+output[i]);
 								}
 							}
 						});
 					} else if(owner == from && args.length == 0){
-						client.irc.privmsg(loc, col["darkRed"]+"You must provide a command");
+						client.irc.privmsg(loc, style["darkRed"]+"You must provide a command");
 					} else {
-						client.irc.privmsg(loc, col["pink"]+"You must be owner to do that");
+						client.irc.privmsg(loc, style["pink"]+"You must be owner to do that");
 					}					
 				}});
 				break;
@@ -237,14 +237,22 @@ api.hookEvent('*', 'privmsg', function(message) {
 					}
 				}});
 				break;
+			case "test":
+				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					client.irc.raw('LIST', loc);
+					api.hookEvent('*', 'list', function(info) {
+						var numOfUsersInChannel = info["list"][0]["users"];
+						console.log(numOfUsersInChannel);
+					});
+				}});
 			default:
 				break;
 		}
 	}
 });
 
-api.hookEvent('*', 'list', function(message) {
-	vote.voters = message.list[0].users-1;
-	client.irc.privmsg("#ectest2", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
+//api.hookEvent('*', 'list', function(message) {
+//	vote.voters = message.list[0].users-1;
+//	client.irc.privmsg("#ectest2", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
 	//client.irc.privmsg('#ectest2', 'hey this is a test');
-});
+//});
