@@ -5,6 +5,7 @@ var fs = require('fs');
 var factory = require('irc-factory'); // npm install irc-factory
 var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
 var style = require('./styles.js');
+var LastFmNode = require('lastfm').LastFmNode;
 
 var owner = false; // username of the bot's owner for current session
 var vote = {
@@ -25,8 +26,27 @@ var client = api.createClient('test', {
 	secure: false
 });
 
+var defaultChan = "#ec";
+
 api.hookEvent('*', 'registered', function(message) {
-	client.irc.join('#ectest2', 'testy2');
+	client.irc.join(defaultChan, 'testy2');
+	var users = ["Lawley-CobHC", "caffufle", "Jazcash"];
+
+	var lastfm = new LastFmNode({
+		api_key: '344c82f3551caf9189cf76653586219d',    // sign-up for a key at http://www.last.fm/api
+		secret: '59d8aca13f9d7066447dec40778ff81f'
+	});
+	
+	var trackStreams = [];
+	
+	for (var i in users) {
+		var user = users[i];
+		trackStreams[i] = ({"user":user, "trackstream":lastfm.stream(user)});
+		trackStreams[i].trackstream.on('nowPlaying', function(track, user) {
+			client.irc.privmsg(defaultChan, user + " is now listening to "+track.artist["#text"] + " - " + track.name);
+		});
+		trackStreams[i].trackstream.start();
+	}
 });
 
 api.hookEvent('*', 'privmsg', function(message) {
@@ -237,17 +257,22 @@ api.hookEvent('*', 'privmsg', function(message) {
 					}
 				}});
 				break;
-			case "test":
+			case "users":
 				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					client.irc.privmsg(loc, "test cmd called!");
 					client.irc.raw('LIST', loc);
 					api.hookEvent('*', 'list', function(info) {
+						client.irc.privmsg(loc, "Done!");
+						console.log(info["list"][0]);
 						var numOfUsersInChannel = info["list"][0]["users"];
-						console.log(numOfUsersInChannel);
+						client.irc.privmsg(loc, "There are "+numOfUsersInChannel+" users in this channel");
 					});
 				}});
 			default:
 				break;
 		}
+	} else {
+		//console.log(message);	
 	}
 });
 
