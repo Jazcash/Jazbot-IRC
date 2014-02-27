@@ -6,6 +6,14 @@ var factory = require('irc-factory'); // npm install irc-factory
 var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
 var style = require('./styles.js');
 var LastFmNode = require('lastfm').LastFmNode;
+var Twit = require('twit');
+var cmdsTmp = require('./commands');
+
+var cmds = [];
+for (var i in cmdsTmp) {
+	var cmdTmp = cmdsTmp[i];
+	cmds[cmdTmp.trigger] = cmdTmp;
+}
 
 var owner = false; // username of the bot's owner for current session
 var vote = {
@@ -18,18 +26,26 @@ var vote = {
 var api = new factory.Api();
 
 var client = api.createClient('test', {
-	nick : 'Jazbot',
-	user : 'Jazbot',
+	nick : 'Jazbot1',
+	user : 'Jazbot1',
 	server : 'irc.w3.org',
-	realname: 'Jazbot',
+	realname: 'Jazbot1',
 	port: 6667,
 	secure: false
 });
 
-var defaultChan = "#ec";
+var defaultChan = "#ectest2";
+
+var T = new Twit({
+					consumer_key:         'unV8PmqZX40GcD0q5W875w'
+				  , consumer_secret:      'of3L3C6TV2eKUVv0q5skYqrb9xxfPJf3tlQAzhVbbc'
+				  , access_token:         '244528862-SYzS4E31ZVoPrZq9K3IcczhuPrkp5OnEwNUlLJbz'
+				  , access_token_secret:  'PNZDkPNtJVdouJdZV1ko8y9HjCvvCo4ZyBFJfhx48KvVp'
+				})
 
 api.hookEvent('*', 'registered', function(message) {
 	client.irc.join(defaultChan, 'testy2');
+	
 	var users = ["Lawley-CobHC", "caffufle", "Jazcash"];
 
 	var lastfm = new LastFmNode({
@@ -43,7 +59,7 @@ api.hookEvent('*', 'registered', function(message) {
 		var user = users[i];
 		trackStreams[i] = ({"user":user, "trackstream":lastfm.stream(user)});
 		trackStreams[i].trackstream.on('nowPlaying', function(track, user) {
-			client.irc.privmsg(defaultChan, user + " is now listening to "+track.artist["#text"] + " - " + track.name);
+			client.irc.privmsg(defaultChan, style["blue"]+user + " is now listening to "+track.artist["#text"] + " - " + track.name);
 		});
 		trackStreams[i].trackstream.start();
 	}
@@ -87,12 +103,18 @@ api.hookEvent('*', 'privmsg', function(message) {
    		var temp = message.split(" ");
    		var cmd = temp[0].substring(1)
    		var args = temp.slice(1)
-		/*console.log("from "+from);
-		console.log("to "+to);
-		console.log("msg "+message);
-		console.log("owner: "+owner);
-		console.log("==============================");*/
-
+		
+		
+		
+		//console.log(cmds);
+		//if (cmd == cmdHi.trigger){
+		//	cmdHi.process(client, style, to, from);
+		//}
+		
+		if (cmds[cmd]){
+			cmds[cmd].process(client, style, to, from);	
+		}
+		
 		switch (cmd){
 			case "testCmd":
 				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
@@ -147,11 +169,11 @@ api.hookEvent('*', 'privmsg', function(message) {
 					}
 				}});
 				break;
-			case "hi":
-				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					client.irc.privmsg(loc, style["cyan"]+"Hello "+from+"!");
-				}});
-				break;
+			//case "hi":
+			//	cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+			//		client.irc.privmsg(loc, style["cyan"]+"Hello "+from+"!");
+			//	}});
+			//	break;
 			case "leave":
 				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
 					if (args.length == 0){ args[0] = to; }
@@ -166,6 +188,27 @@ api.hookEvent('*', 'privmsg', function(message) {
 							console.log(e)
 						}
 					}
+				}});
+				break;
+			case "trends":
+				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
+					T.get('trends/place', {id:1}, function (err, reply) {
+						try {
+							var trends = reply[0].trends;
+							var trendsString = "";
+							for (var i in trends) {
+								var trend = trends[i];
+								if (i < trends.length-1){
+									trendsString += trend.name + ", ";
+								} else {
+									trendsString += trend.name;
+								}
+							}
+							client.irc.privmsg(loc, style["cyan"]+trendsString);
+						} catch (Exception){
+								
+						}
+					})
 				}});
 				break;
 			case "join":
