@@ -26,10 +26,10 @@ var vote = {
 var api = new factory.Api();
 
 var client = api.createClient('test', {
-	nick : 'Jazbot1',
-	user : 'Jazbot1',
+	nick : 'Jazbot',
+	user : 'Jazbot',
 	server : 'irc.w3.org',
-	realname: 'Jazbot1',
+	realname: 'Jazbot',
 	port: 6667,
 	secure: false
 });
@@ -37,24 +37,22 @@ var client = api.createClient('test', {
 var defaultChan = "#ectest2";
 
 var T = new Twit({
-					consumer_key:         'unV8PmqZX40GcD0q5W875w'
-				  , consumer_secret:      'of3L3C6TV2eKUVv0q5skYqrb9xxfPJf3tlQAzhVbbc'
-				  , access_token:         '244528862-SYzS4E31ZVoPrZq9K3IcczhuPrkp5OnEwNUlLJbz'
-				  , access_token_secret:  'PNZDkPNtJVdouJdZV1ko8y9HjCvvCo4ZyBFJfhx48KvVp'
-				})
+	consumer_key:         'a',
+	consumer_secret:      'b',
+	access_token:         'c',
+	access_token_secret:  'd'
+})
 
 api.hookEvent('*', 'registered', function(message) {
 	client.irc.join(defaultChan, 'testy2');
 	
+	// Last.fm
 	var users = ["Lawley-CobHC", "caffufle", "Jazcash"];
-
 	var lastfm = new LastFmNode({
-		api_key: '344c82f3551caf9189cf76653586219d',    // sign-up for a key at http://www.last.fm/api
-		secret: '59d8aca13f9d7066447dec40778ff81f'
+		api_key: 'a',
+		secret: 'b'
 	});
-	
 	var trackStreams = [];
-	
 	for (var i in users) {
 		var user = users[i];
 		trackStreams[i] = ({"user":user, "trackstream":lastfm.stream(user)});
@@ -93,26 +91,14 @@ api.hookEvent('*', 'privmsg', function(message) {
 			}
 		}
 	}
-	var pm = false;
-	if (to == client.irc.nick){
-		//to = from;	// if message sent directly to bot, set 'to' to the username
-		pm = true;
-	}
-	//console.log(pm);
+	var pm = (to == client.irc.nick) ? true : false;
+	
 	if (message[0] == "!"){
-   		var temp = message.split(" ");
-   		var cmd = temp[0].substring(1)
-   		var args = temp.slice(1)
+   		var cmd = message.split(" ")[0].substring(1)
+   		var args = message.split(" ").slice(1)
 		
-		
-		
-		//console.log(cmds);
-		//if (cmd == cmdHi.trigger){
-		//	cmdHi.process(client, style, to, from);
-		//}
-		
-		if (cmds[cmd]){
-			cmds[cmd].process(client, style, to, from);	
+		if (cmds[cmd] && cmds[cmd].where == "chan"){
+			cmds[cmd].process(client, style, to, from, pm);	
 		}
 		
 		switch (cmd){
