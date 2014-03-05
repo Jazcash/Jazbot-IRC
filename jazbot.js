@@ -1,312 +1,201 @@
 "use strict";
+// Built-in imports
 var sys = require('sys');
 var exec = require('child_process').exec;
 var fs = require('fs');
-var factory = require('irc-factory'); // npm install irc-factory
-var bcrypt = require('bcrypt-nodejs'); // npm install bcrypt-nodejs
-var style = require('./styles.js');
-var LastFmNode = require('lastfm').LastFmNode;
+// Third-party imports
+var factory = require('irc-factory');
+var bcrypt = require('bcrypt-nodejs');
 var Twit = require('twit');
-var cmdsTmp = require('./commands');
+var LastFmNode = require('lastfm').LastFmNode;
+// My imports
+var style = require('./styles.js');
 
-var cmds = [];
-for (var i in cmdsTmp) {
-	var cmdTmp = cmdsTmp[i];
-	cmds[cmdTmp.trigger] = cmdTmp;
-}
-
-var owner = false; // username of the bot's owner for current session
-var vote = {
-	name: "",
-	opt1: 0,
-	opt2: 0,
-	voters: 0
-};
+var lastfm = new LastFmNode({
+	api_key: '344c82f3551caf9189cf76653586219d',
+	secret: '59d8aca13f9d7066447dec40778ff81f'
+});
 
 var api = new factory.Api();
-
-var client = api.createClient('test', {
-	nick : 'Jazbot',
-	user : 'Jazbot',
+var client = api.createClient('jazbot', {
+	nick : "Jazbot",
+	user : "Jazbot",
 	server : 'irc.w3.org',
-	realname: 'Jazbot',
+	realname: "Jazbot",
 	port: 6667,
 	secure: false
 });
 
-var defaultChan = "#ectest2";
+var initialChannels = ["#ectest4 testy4"];
+var channels = [];
+var myNick = null;
+var	owner = null;
 
-var T = new Twit({
-	consumer_key:         'a',
-	consumer_secret:      'b',
-	access_token:         'c',
-	access_token_secret:  'd'
+var cmds =
+{
+	"!setpass":{"where":"pm", "auth":false, "reqArgs":1, "synopsis":"!setpass <password>",
+		"func":function(msg, target, args){
+			var hash = bcrypt.hashSync(args[1]);
+			if ((!fs.existsSync("passhash") && owner == null) || msg.username == owner){
+				fs.writeFile("passhash", hash, function(err) {
+					if(err) {
+						console.log(err);
+					} else {
+						client.irc.privmsg(target, style.lightgreen+"The file was saved successfully");
+					}
+				});
+			} else if(fs.existsSync("passhash")){
+				client.irc.privmsg(target, style.lightred+"Pass is already set");
+			}
+		}
+	},
+	"!auth":{"pm":{"auth":false, "reqArgs":1, "synopsis":"!auth <password>",
+		"func":function(msg, target, args){
+			if (fs.existsSync("passhash") && owner == null){
+				fs.readFile('passhash', "utf-8", function (err, data) {
+					if (err){ throw err; }
+						var pass = args[1];
+					if (bcrypt.compareSync(pass, data)){
+						client.irc.privmsg(target, style.lightgreen+"Password Valid - You are now the authenticated operator");
+						owner = msg.username;
+					} else {
+						client.irc.privmsg(target, style.lightred+"Password Invalid");
+					}
+				});
+			} else if (msg.username == owner){
+				client.irc.privmsg(target, style.lightred+"You are already the owner!");
+			} else if (owner !== null){
+				client.irc.privmsg(target, style.lightred+"An owner has already been set");
+			} else if (!fs.existsSync("passhash")){
+				client.irc.privmsg(target, style.lightred+"Password is not set");
+			}
+		}
+	},
+	"!hi":{"auth":false, "reqArgs":0, "synopsis":"!hi [string]",
+		"func":function(msg, target, args){
+			var str = (args.length > 1) ? args[1] : msg.nickname;
+			client.irc.privmsg(target, style.purple+"Hello "+str+"!");
+		}
+	},
+	"!quit":{"auth":true, "reqArgs":0, "synopsis":"!quit [string]", 
+		"func":function(msg, target, args){
+			var str = (args.length > 1) ? args[1] : msg.nickname + " called !quit";
+			client.irc.disconnect(str);
+		}
+	},
+	"!join":{"auth":true, "reqArgs":1, "synopsis":"!join <channel>", 
+		"func":function(msg, target, args){
+			client.irc.join(args[1]);
+		}
+	},
+	"!leave":{"chan":{"auth":true, "reqArgs":0, "synopsis":"!leave [channel]", 
+			"func":function(msg, target, args){
+				var chan = "bobo";
+				client.irc.join(args[1]);
+			}
+		},"pm":{"auth":true, "reqArgs":1, "synopsis":"!leave <channel>", 
+			"func":function(msg, target, args){
+				var chan = (args[1] !== undefined && msg.isPm) ? args[1] : 
+				client.irc.join(args[1]);
+			}
+		}
+	},
+	"!kick":{"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>",
+		"func":function(msg, target, args){
+			// When irc-factory adds the thing - Make sure username is valid and in channel
+			if (msg.isPm){
+				if (args.length <= 2){
+					client.irc.privmsg(target, style.lightred+"You must provide a channel. " + this.synopsis);
+				} else {
+					client.irc.kick(args[1], args[2]);
+				}
+			} else {
+				client.irc.kick(target, args[1]);
+			}
+		}
+	},
+	"!chans":{"auth":true, "reqArgs":0, "synopsis":"!chans",
+		"func":function(msg, target, args){
+			client.irc.privmsg(target, channels);
+		}
+	},
+	"!lastfm":{"auth":false, "reqArgs":1, "synopsis":"!lastfm <last.fm username>",
+		"func":function(msg, target, args){
+			var user = args[1];
+			var trackStream = lastfm.stream(user);
+			var done = false;
+			trackStream.on('nowPlaying', function(track) {
+				if (!done){
+					client.irc.privmsg(target, style.blue+user + " is currently listening to "+style.bold+track.artist["#text"] + " - " + track.name);
+				}
+				done = true;
+			});
+			trackStream.on('lastPlayed', function(track) {
+				if (!done){
+					client.irc.privmsg(target, style.blue+user + " last listened to "+style.bold+track.artist["#text"] + " - " + track.name);
+				}
+				done = true;
+			});
+			trackStream.start();
+			trackStream.stop();
+		}
+	},
+}
+
+process.on('SIGINT', function() {
+	client.irc.disconnect("Shutdown from CLI");
+  console.log("\nGracefully shutting down from SIGINT (Ctrl-C)" );
+  process.exit();
 })
 
-api.hookEvent('*', 'registered', function(message) {
-	client.irc.join(defaultChan, 'testy2');
-	
-	// Last.fm
-	var users = ["Lawley-CobHC", "caffufle", "Jazcash"];
-	var lastfm = new LastFmNode({
-		api_key: 'a',
-		secret: 'b'
-	});
-	var trackStreams = [];
-	for (var i in users) {
-		var user = users[i];
-		trackStreams[i] = ({"user":user, "trackstream":lastfm.stream(user)});
-		trackStreams[i].trackstream.on('nowPlaying', function(track, user) {
-			client.irc.privmsg(defaultChan, style["blue"]+user + " is now listening to "+track.artist["#text"] + " - " + track.name);
-		});
-		trackStreams[i].trackstream.start();
+api.hookEvent('*', 'registered', function(msg) {
+	myNick = msg.nickname;
+	for (var i in initialChannels){
+		client.irc.join(initialChannels[i].split(" ")[0], initialChannels[i].split(" ")[1]);
 	}
 });
 
-api.hookEvent('*', 'privmsg', function(message) {
-	var from = message.nickname;
-	var to = message.target;
-	var message = message.message;
-	console.log(message); // Shows every IRC message the bot sees in the console
-	
-	function cmdHandler(params){
-		// if params not supplied, default command is executable anywhere, by anybody
-		var cmdFunc = (params.cmd === undefined) ? function(){console.log("You must pass a function as a value for the 'cmd' key!")} : params.cmd;
-		var authRequired = (params.authRequired === undefined) ? false : params.authRequired; // does cmd require auth?
-		var userHasAuth = (from == owner) ? true : false; // does user have auth?
-		var where = (params.where === undefined) ? "anywhere" : params.where; // where is cmd executable?
-		var loc = (pm) ? from : to; // where to send response
-		
-		if (where == "pm_only" && !pm){ // not allowed
-			client.irc.privmsg(loc, "That command can only be used in a private message to me");
-		} else if(where == "channel_only" && pm){ // not allowed
-			client.irc.privmsg(loc, "That command can only be used in a channel I am in");
-		} else {
-			if (authRequired && userHasAuth){ // allowed
-				cmdFunc(loc);
-			} else if(authRequired && !userHasAuth){ // now allowed
-				client.irc.privmsg(loc, "You need to be owner to do that");
-			} else if(!authRequired){ // allowed
-				cmdFunc(loc);
+api.hookEvent('*', 'join', function(msg) {
+	if (msg.nickname == myNick){
+		channels.push(msg.channel);	
+	}
+});
+
+api.hookEvent('*', 'part', function(msg) {
+	if (msg.nickname == myNick){
+		channels.remove(msg.channel);
+	}
+});
+
+api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, username, hostname, target, message, time and raw
+	msg["isPm"] = (msg.target == myNick) ? true : false;
+	var target = (msg.isPm) ? msg.username : msg.target;
+	msg["isCmd"] = (msg.message[0] == "!") ? true : false;
+	msg ["auth"] = (msg.username == owner) ? true : false;
+	if (msg.isCmd) {
+		var args = msg.message.split(" ");
+		if (cmds[args[0]] !== undefined){
+			var cmd = cmds[args[0]];
+			if (cmd.where == "pm" && !msg.isPm){
+				client.irc.privmsg(target, style.lightred+"That command can only be used in a PM to me");
+			} else if (cmd.where == "chan" && msg.isPm){
+				client.irc.privmsg(target, style.lightred+"That command can only be used in a channel I am in");
+			} else {
+				if (cmd.auth && !msg.auth){
+					client.irc.privmsg(target, style.lightred+"You require authorisation to use that command");
+				} else {
+					if (args.length-1 < cmd.reqArgs){
+						client.irc.privmsg(target, style.lightred+"Invalid number of args - SYNOPSIS: "+cmd.synopsis);
+					} else {
+						try {
+							cmd.func(msg, target, args);
+						} catch (err){
+							client.irc.privmsg(target, style.lightred+"There was an error executing that command, blame Jaz");
+							console.log(err);	
+						}	
+					}
+				}
 			}
 		}
 	}
-	var pm = (to == client.irc.nick) ? true : false;
-	
-	if (message[0] == "!"){
-   		var cmd = message.split(" ")[0].substring(1)
-   		var args = message.split(" ").slice(1)
-		
-		if (cmds[cmd] && cmds[cmd].where == "chan"){
-			cmds[cmd].process(client, style, to, from, pm);	
-		}
-		
-		switch (cmd){
-			case "testCmd":
-				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
-					client.irc.privmsg(loc, "Hello!");
-				}});
-				break;	
-			case "setpass":
-				cmdHandler({where: "pm_only", authRequired:false, cmd:function(loc){
-					var hash = bcrypt.hashSync(args[0]);
-					if (!fs.existsSync("passhash") && !owner){
-						fs.writeFile("passhash", hash, function(err) {
-							if(err) {
-								console.log(err);
-							} else {
-								client.irc.privmsg(loc, style["lightGreen"]+"The file was saved successfully");
-							}
-						});
-					} else if(from == owner){
-						fs.writeFile("passhash", hash, function(err) {
-							if(err) {
-								console.log(err);
-							} else {
-								client.irc.privmsg(loc, style["lightGreen"]+"The file was saved successfully");
-							}
-						});
-					} else {
-						client.irc.privmsg(loc, style["pink"]+"Pass is already set");
-					}
-				}});
-				break;
-			case "auth":
-				cmdHandler({where: "pm_only", authRequired:false, cmd:function(loc){
-					if (fs.existsSync("passhash") && args[0] && !owner){
-						fs.readFile('passhash', "utf-8", function (err, data) {
-							if (err){ throw err; }
-							var pass = args[0];
-							if (bcrypt.compareSync(pass, data)){
-								client.irc.privmsg(loc, style["lightGreen"]+"Password Valid - User "+from+" is now the authenticated operator");
-								owner = from;
-							} else {
-								client.irc.privmsg(loc, style["pink"]+"Password Invalid");
-							}
-						});
-					} else if (from == owner){
-						client.irc.privmsg(loc, style["pink"]+"You are already the owner!");
-					} else if (owner){
-						client.irc.privmsg(loc, style["pink"]+"An owner has already been set");
-					} else if (!fs.existsSync("passhash")){
-						client.irc.privmsg(loc, style["pink"]+"Pass isn't set");
-					} else {
-						client.irc.privmsg(loc, style["pink"]+"You must provide the password");
-					}
-				}});
-				break;
-			//case "hi":
-			//	cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-			//		client.irc.privmsg(loc, style["cyan"]+"Hello "+from+"!");
-			//	}});
-			//	break;
-			case "leave":
-				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
-					if (args.length == 0){ args[0] = to; }
-					for (var i=0; i<args.length; i++){
-						var channel = args[i]
-						if (channel[0] !== "#"){
-							channel = "#" + channel
-						}
-						try{
-							client.irc.part(channel);
-						} catch (e){
-							console.log(e)
-						}
-					}
-				}});
-				break;
-			case "trends":
-				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					T.get('trends/place', {id:1}, function (err, reply) {
-						try {
-							var trends = reply[0].trends;
-							var trendsString = "";
-							for (var i in trends) {
-								var trend = trends[i];
-								if (i < trends.length-1){
-									trendsString += trend.name + ", ";
-								} else {
-									trendsString += trend.name;
-								}
-							}
-							client.irc.privmsg(loc, style["cyan"]+trendsString);
-						} catch (Exception){
-								
-						}
-					})
-				}});
-				break;
-			case "join":
-				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
-					if (args.length > 0){
-						for (var i=0; i<args.length; i++){
-							var channel = args[i]
-							if (channel[0] !== "#"){
-								channel = "#" + channel
-							}
-							try{
-								client.irc.join(channel);
-							} catch (e){
-								console.log(e)
-							}
-						}
-					} else {
-						client.irc.privmsg(loc, style["darkRed"]+"You must provide a channel to join");	
-					}
-				}});
-				break;
-			case "exec":
-				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
-					if (owner == from && args.length > 0){
-						var output = ""
-						var str = args.join(' ');
-						console.log(str);
-						exec(str, function(error, stdout, stderr){
-							output = JSON.stringify(stdout);//stdout.replace('\n', '\\n');
-							output = output.substring(1, output.length-1);
-							output = output.split('\\n');
-							//client.irc.privmsg(loc, style["orange"]+"PMing the output to "+from);
-							if (output.length > 50){
-								client.irc.privmsg(loc, style["darkRed"]+"No can do - Output is more than 50 lines long");							
-							} else {
-								for (var i=0; i<output.length-1; i++){
-									client.irc.privmsg(loc, style["lightGrey"]+output[i]);
-								}
-							}
-						});
-					} else if(owner == from && args.length == 0){
-						client.irc.privmsg(loc, style["darkRed"]+"You must provide a command");
-					} else {
-						client.irc.privmsg(loc, style["pink"]+"You must be owner to do that");
-					}					
-				}});
-				break;
-			case "xkcd":
-				cmdHandler({where: "all", authRequired:true, cmd:function(loc){
-					var loc = (args[0] === undefined) ? loc : args[0];
-					if (owner == from){
-						for (var i=1; i<10; i++){
-							client.irc.privmsg(loc, "https://xkcd.com/"+i+"/");
-						}
-					}
-				}});
-				break;
-			case "callvote":
-				cmdHandler({where: "channel_only", authRequired:false, cmd:function(loc){
-					if (args[0]){
-						vote.name = args.join(" ");
-						client.irc.raw('LIST', loc);
-					} else {
-						client.irc.privmsg(loc, "You must state what you wish to vote on!");
-					}
-				}});
-				break;
-			case "vote":
-				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					if ((vote.opt1 < vote.voters-1) && (vote.opt2 < vote.voters-1)){
-						if (args[0] == "y"){
-							vote.opt1 = vote.opt1+1;
-							client.irc.privmsg(loc, vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
-						} else if(args[0] == "n"){
-							vote.opt2 = vote.opt2+1;
-							client.irc.privmsg(loc, vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
-						} else {
-							client.irc.privmsg(loc, "You must say state y or n");
-						}
-						vote.name = args[0];
-					} else if (args[0] && vote.name == "") {
-						client.irc.privmsg(loc, "Currently no vote in progress");
-					} else{
-						client.irc.privmsg(loc, "Vote passed! Majority voted in favour of "+vote.name);
-						vote.opt1 = 0;
-						vote.op2 = 0;
-						vote.name = ""
-						vote.voters = 0;
-					}
-				}});
-				break;
-			case "users":
-				cmdHandler({where: "all", authRequired:false, cmd:function(loc){
-					client.irc.privmsg(loc, "test cmd called!");
-					client.irc.raw('LIST', loc);
-					api.hookEvent('*', 'list', function(info) {
-						client.irc.privmsg(loc, "Done!");
-						console.log(info["list"][0]);
-						var numOfUsersInChannel = info["list"][0]["users"];
-						client.irc.privmsg(loc, "There are "+numOfUsersInChannel+" users in this channel");
-					});
-				}});
-			default:
-				break;
-		}
-	} else {
-		//console.log(message);	
-	}
 });
-
-//api.hookEvent('*', 'list', function(message) {
-//	vote.voters = message.list[0].users-1;
-//	client.irc.privmsg("#ectest2", vote.name+" - Yes: "+vote.opt1+"/"+vote.voters+" - No: "+vote.opt2+"/"+vote.voters);
-	//client.irc.privmsg('#ectest2', 'hey this is a test');
-//});
