@@ -74,19 +74,22 @@ var cmds =
 		}
 	},
 	"!hi":{
-		"chan":{"auth":true, "reqArgs":1, "synopsis":"!hi <string>"},
+		"pm":{"auth":true, "reqArgs":1, "synopsis":"!hi <string>"},
+		"chan":{"auth":false, "reqArgs":0, "synopsis":"!hi [string]"},
 		"func":function(msg, target, args){
 			var str = (args.length > 1) ? args[1] : msg.nickname;
 			client.irc.privmsg(target, style.purple+"Hello "+str+"!");
 		}
 	},
-	"!quit":{"auth":true, "reqArgs":0, "synopsis":"!quit [string]", 
+	"!quit":{
+		"auth":true, "reqArgs":0, "synopsis":"!quit [string]", 
 		"func":function(msg, target, args){
 			var str = (args.length > 1) ? args[1] : msg.nickname + " called !quit";
 			client.irc.disconnect(str);
 		}
 	},
-	"!join":{"auth":true, "reqArgs":1, "synopsis":"!join <channel>", 
+	"!join":{
+		"auth":true, "reqArgs":1, "synopsis":"!join <channel>", 
 		"func":function(msg, target, args){
 			client.irc.join(args[1]);
 		}
@@ -99,7 +102,8 @@ var cmds =
 			client.irc.join(args[1]);
 		}
 	},
-	"!kick":{"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>",
+	"!kick":{
+		"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>",
 		"func":function(msg, target, args){
 			// When irc-factory adds the thing - Make sure username is valid and in channel
 			if (msg.isPm){
@@ -113,12 +117,14 @@ var cmds =
 			}
 		}
 	},
-	"!chans":{"auth":true, "reqArgs":0, "synopsis":"!chans",
+	"!chans":{
+		"auth":true, "reqArgs":0, "synopsis":"!chans",
 		"func":function(msg, target, args){
 			client.irc.privmsg(target, channels);
 		}
 	},
-	"!lastfm":{"auth":false, "reqArgs":1, "synopsis":"!lastfm <last.fm username>",
+	"!lastfm":{
+		"auth":false, "reqArgs":1, "synopsis":"!lastfm <last.fm username>",
 		"func":function(msg, target, args){
 			var user = args[1];
 			var trackStream = lastfm.stream(user);
@@ -175,9 +181,9 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 		var args = msg.message.split(" ");
 		if (cmds[args[0]] !== undefined){
 			var cmd = cmds[args[0]];
-			if ((("pm" in cmd) && !("chan" in cmd)) && !msg.isPm){
+			if (cmd.where == "pm" && !msg.isPm){
 				client.irc.privmsg(target, style.lightred+"That command can only be used in a PM to me");
-			} else if ((("chan" in cmd) && !("pm" in cmd)) && msg.isPm){
+			} else if (cmd.where == "chan" && msg.isPm){
 				client.irc.privmsg(target, style.lightred+"That command can only be used in a channel I am in");
 			} else {
 				if (cmd.auth && !msg.auth){
