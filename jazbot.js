@@ -33,7 +33,8 @@ var	owner = null;
 
 var cmds =
 {
-	"!setpass":{"where":"pm", "auth":false, "reqArgs":1, "synopsis":"!setpass <password>",
+	"!setpass":{
+		"pm":{"auth":false, "reqArgs":1, "synopsis":"!setpass <password>"},
 		"func":function(msg, target, args){
 			var hash = bcrypt.hashSync(args[1]);
 			if ((!fs.existsSync("passhash") && owner == null) || msg.username == owner){
@@ -49,7 +50,8 @@ var cmds =
 			}
 		}
 	},
-	"!auth":{"pm":{"auth":false, "reqArgs":1, "synopsis":"!auth <password>",
+	"!auth":{
+		"pm":{"auth":false, "reqArgs":1, "synopsis":"!auth <password>"},
 		"func":function(msg, target, args){
 			if (fs.existsSync("passhash") && owner == null){
 				fs.readFile('passhash', "utf-8", function (err, data) {
@@ -71,7 +73,8 @@ var cmds =
 			}
 		}
 	},
-	"!hi":{"auth":false, "reqArgs":0, "synopsis":"!hi [string]",
+	"!hi":{
+		"chan":{"auth":true, "reqArgs":1, "synopsis":"!hi <string>"},
 		"func":function(msg, target, args){
 			var str = (args.length > 1) ? args[1] : msg.nickname;
 			client.irc.privmsg(target, style.purple+"Hello "+str+"!");
@@ -88,16 +91,12 @@ var cmds =
 			client.irc.join(args[1]);
 		}
 	},
-	"!leave":{"chan":{"auth":true, "reqArgs":0, "synopsis":"!leave [channel]", 
-			"func":function(msg, target, args){
-				var chan = "bobo";
-				client.irc.join(args[1]);
-			}
-		},"pm":{"auth":true, "reqArgs":1, "synopsis":"!leave <channel>", 
-			"func":function(msg, target, args){
-				var chan = (args[1] !== undefined && msg.isPm) ? args[1] : 
-				client.irc.join(args[1]);
-			}
+	"!leave":{
+		"chan":{"auth":true, "reqArgs":0, "synopsis":"!leave [channel]"},
+		"pm":{"auth":true, "reqArgs":1, "synopsis":"!leave <channel>"},
+		"func":function(msg, target, args){
+			var chan = "bobo";
+			client.irc.join(args[1]);
 		}
 	},
 	"!kick":{"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>",
@@ -139,14 +138,14 @@ var cmds =
 			trackStream.start();
 			trackStream.stop();
 		}
-	},
-}
+	}
+};
 
 process.on('SIGINT', function() {
 	client.irc.disconnect("Shutdown from CLI");
   console.log("\nGracefully shutting down from SIGINT (Ctrl-C)" );
   process.exit();
-})
+});
 
 api.hookEvent('*', 'registered', function(msg) {
 	myNick = msg.nickname;
@@ -176,9 +175,9 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 		var args = msg.message.split(" ");
 		if (cmds[args[0]] !== undefined){
 			var cmd = cmds[args[0]];
-			if (cmd.where == "pm" && !msg.isPm){
+			if ((("pm" in cmd) && !("chan" in cmd)) && !msg.isPm){
 				client.irc.privmsg(target, style.lightred+"That command can only be used in a PM to me");
-			} else if (cmd.where == "chan" && msg.isPm){
+			} else if ((("chan" in cmd) && !("pm" in cmd)) && msg.isPm){
 				client.irc.privmsg(target, style.lightred+"That command can only be used in a channel I am in");
 			} else {
 				if (cmd.auth && !msg.auth){
