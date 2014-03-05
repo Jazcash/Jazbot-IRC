@@ -5,8 +5,9 @@ My Node-JS IRC bot!
 
 ##Dependencies
 
-* node-irc `npm install irc-factory`
-* bcrypt-nodejs `npm install bcrypt-nodejs`
+* node-irc
+* bcrypt-nodejs
+* last-fm
 
 ##Usage
 
