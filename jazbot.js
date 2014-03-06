@@ -1,4 +1,7 @@
 "use strict";
+/* 	##################
+		Author: Jazcash
+ 		################## */
 // Built-in imports
 var sys = require('sys');
 var exec = require('child_process').exec;
@@ -74,8 +77,7 @@ var cmds =
 		}
 	},
 	"!hi":{
-		"pm":{"auth":true, "reqArgs":1, "synopsis":"!hi <string>"},
-		"chan":{"auth":false, "reqArgs":0, "synopsis":"!hi [string]"},
+		"any":{"auth":false, "reqArgs":0, "synopsis":"!quit [string]"},
 		"func":function(msg, target, args){
 			var str = (args.length > 1) ? args[1] : msg.nickname;
 			client.irc.privmsg(target, style.purple+"Hello "+str+"!");
@@ -103,7 +105,7 @@ var cmds =
 		}
 	},
 	"!kick":{
-		"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>",
+		"any":{"auth":true, "reqArgs":1, "synopsis":"!kick [channel] <username>"},
 		"func":function(msg, target, args){
 			// When irc-factory adds the thing - Make sure username is valid and in channel
 			if (msg.isPm){
@@ -177,29 +179,36 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 	var target = (msg.isPm) ? msg.username : msg.target;
 	msg["isCmd"] = (msg.message[0] == "!") ? true : false;
 	msg ["auth"] = (msg.username == owner) ? true : false;
+	
+	if (msg.nickname == "Jazcash") msg.auth = true; //temp
+	
 	if (msg.isCmd) {
 		var args = msg.message.split(" ");
 		if (cmds[args[0]] !== undefined){
 			var cmd = cmds[args[0]];
-			if (cmd.where == "pm" && !msg.isPm){
-				client.irc.privmsg(target, style.lightred+"That command can only be used in a PM to me");
-			} else if (cmd.where == "chan" && msg.isPm){
-				client.irc.privmsg(target, style.lightred+"That command can only be used in a channel I am in");
-			} else {
-				if (cmd.auth && !msg.auth){
-					client.irc.privmsg(target, style.lightred+"You require authorisation to use that command");
-				} else {
-					if (args.length-1 < cmd.reqArgs){
-						client.irc.privmsg(target, style.lightred+"Invalid number of args - SYNOPSIS: "+cmd.synopsis);
+			var where;
+			if (cmd.any !== undefined){
+				where = "any";	
+			} else{
+				where = (msg.isPm) ? "pm" : "chan";	
+			}
+			if (cmd[where] !== undefined || (cmd.pm === undefined && cmd.chan === undefined)){
+				console.log(cmd);
+				console.log(where);
+				if ((cmd.auth && msg.auth) || !cmd.auth){
+					if (args.length-1 >= cmd[where].reqArgs){
+						 cmd.func(msg, target, args);
 					} else {
-						try {
-							cmd.func(msg, target, args);
-						} catch (err){
-							client.irc.privmsg(target, style.lightred+"There was an error executing that command, blame Jaz");
-							console.log(err);	
-						}	
+						client.irc.privmsg(target, style.lightred+"We require more args");
 					}
+				} else {
+					client.irc.privmsg(target, style.lightred+"You require authorisation to use that command");
 				}
+			} else if(cmd[where] == undefined){
+				var err = (msg.isPm) ? "That command can only be used in a channel I am in" : "That command can only be used in a PM to me";
+				client.irc.privmsg(target, style.lightred+err);
+			} else{
+				client.irc.privmsg(target, style.lightred+"Oh nobs");
 			}
 		}
 	}
