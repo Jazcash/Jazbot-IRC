@@ -270,8 +270,9 @@ var cmds =
 									//console.log(thisItem);
 									if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
 									else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
-									if (thisItem.id != latestItem){
-										latestItem = thisItem.id;
+									var namepluslink = thisItem.name + thisItem.link;
+									if (namepluslink != latestItem){
+										latestItem = namepluslink;
 										func(thisItem);
 									}
 								} else {
