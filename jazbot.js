@@ -267,10 +267,11 @@ var cmds =
 								if (type == "rss") thisItem = result.rss.channel[0].item[0]
 								else if(type == "feed") thisItem = result.feed.entry[0];
 								if (thisItem !== undefined){
-									if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0]}
-									else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href}
-									if (thisItem.link != latestItem){
-										latestItem = thisItem.link;
+									//console.log(thisItem);
+									if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
+									else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
+									if (thisItem.id != latestItem){
+										latestItem = thisItem.id;
 										func(thisItem);
 									}
 								} else {
