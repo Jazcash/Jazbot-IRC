@@ -269,8 +269,8 @@ var cmds =
 								if (thisItem !== undefined){
 									if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0]}
 									else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href}
-									if (thisItem.title != latestItem){
-										latestItem = thisItem.title;
+									if (thisItem.link != latestItem){
+										latestItem = thisItem.link;
 										func(thisItem);
 									}
 								} else {
