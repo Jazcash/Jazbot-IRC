@@ -8,7 +8,7 @@ var factory = require('irc-factory');
 var bcrypt = require('bcrypt-nodejs');
 //var Twit = require('twit');
 var LastFmNode = require('lastfm').LastFmNode;
-var request = require('request');
+var requestsync = require('request-sync');
 var parseString = require('xml2js').parseString;
 var JSONFile = require('json-tu-file');
 // My imports
@@ -49,6 +49,7 @@ var lastfm = new LastFmNode({
 var initialChannels = config.channels;
 var myNick = null;
 var	owner = null;
+owner = "~Jazcash"; // temp
 var votename, opt1, opt2, voteinprogress, eligible, maxvotes;
 
 var cmds =
@@ -272,12 +273,9 @@ var cmds =
 		}
 	},
 	"!listen":{
-		"any":{"auth":false, "reqArgs":2, "synopsis":"!listen <name> <rss xml> [interval - default=1min]"},
+		"any":{"auth":false, "reqArgs":2, "synopsis":"!listen <name> <rss xml> [interval in seconds - default = 60]"},
 		"func":function(msg, target, args){
-			var rssListener = {"id":args[1], "feed":args[2], "interval":(args.length > 3) ? args[3] : 60000};
-			onNewRSSItem(rssListener, false, target, function(item){
-				client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
-			});
+			listenerFunction(msg, target, args, false);
 		}
 	},
 	"!unlisten":{
@@ -287,12 +285,9 @@ var cmds =
 		}
 	},
 	"!subscribe":{
-		"any":{"auth":false, "reqArgs":2, "synopsis":"!subscribe <name> <rss xml> [interval - default=1min]"}, 
+		"any":{"auth":true, "reqArgs":2, "synopsis":"!subscribe <name> <rss xml> [interval - default=1min]"}, 
 		"func":function(msg, target, args){
-			var rssListener = {"id":args[1], "feed":args[2], "interval":(args.length > 3) ? args[3] : 60000};
-			onNewRSSItem(rssListener, true, target, function(item){
-				client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
-			});
+			listenerFunction(msg, target, args, true);
 		}
 	},
 	"!unsubscribe":{
@@ -321,70 +316,87 @@ function addSubscription(sub){
 	JSONFile.writeFileSync(subs, 'subscriptions.json', {encoding: 'utf-8'});
 }
 
+function listenerFunction(msg, target, args, isSubscription){
+	var interval = (args.length > 3) ? args[3]*1000 : 60000;
+	console.log(interval);
+	if (interval >= 5000){
+		var rssListener = {"id":args[1], "feed":args[2], "interval":interval};
+		var thing = onNewRSSItem(rssListener, isSubscription, target, function(item){
+			client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
+		});
+		//if (thing !== undefined) console.log(thing);
+	} else {
+		client.irc.privmsg(target, style.lightred+"Interval must be 5 seconds or greater");
+	}
+}
+
 function onNewRSSItem(rssListener, subscription, target, func){
 	var latestItem = null;
+	var ok = false;
 	var intervalId = setInterval(function addFeed(firstIteration){
 		if (firstIteration === undefined) firstIteration = false;
-		request(rssListener.feed, function (error, response, body) {
-			try {
-				if (error == null && response.statusCode == 200) {
-					var xml = body;
-					parseString(xml, function (err, result) {
-						var type;
-						if ("rss" in result) type = "rss"
-						else if("feed" in result) type = "feed"
-						var thisItem;
-						if (type == "rss") thisItem = result.rss.channel[0].item[0]
-						else if(type == "feed") thisItem = result.feed.entry[0];
-						if (thisItem !== undefined){
-							//console.log(thisItem);
-							if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
-							else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
-							var namepluslink = thisItem.name + thisItem.link;
-							if (namepluslink != latestItem){
-								if (firstIteration){
-									if (subscription){ // !subscribe
-										console.log(getSubscriptions());
-										console.log(rssListener.id);
-										if (rssListener.id in getSubscriptions()){
-											throw {name:"Subscription Exists", msg:"Subscription already exists"}
-										} else {
-											addSubscription(rssListener);
-											client.irc.privmsg(target, style.lightgreen+"Subscription added");
-										}
-									} else { // !listen
-										if (rssListener.id in listeners){
-											throw {name:"Listener Exists", msg:"Listener already exists"}
-										} else {
-											listeners[rssListener.id] = {"feed":rssListener.feed, "interval":rssListener.interval};
-											client.irc.privmsg(target, style.lightgreen+"Listener added");
-										}
+		var response = requestsync(rssListener.feed);
+		var body = response.body;
+		try {
+			if (response.statusCode == 200) {
+				var xml = body;
+				parseString(xml, function (err, result) {
+					var type;
+					if ("rss" in result) type = "rss"
+					else if("feed" in result) type = "feed"
+					var thisItem;
+					if (type == "rss") thisItem = result.rss.channel[0].item[0]
+					else if(type == "feed") thisItem = result.feed.entry[0];
+					if (thisItem !== undefined){
+						//console.log(thisItem);
+						if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
+						else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
+						var namepluslink = thisItem.name + thisItem.link;
+						if (namepluslink != latestItem){
+							console.log(firstIteration)
+							if (firstIteration){
+								if (subscription){ // !subscribe
+									if (rssListener.id in getSubscriptions()){
+										throw {name:"Subscription Exists", msg:"Subscription already exists"}
+									} else {
+										addSubscription(rssListener);
+										client.irc.privmsg(target, style.lightgreen+"Subscription added");
+									}
+								} else { // !listen
+									if (rssListener.id in listeners){
+										throw {name:"Listener Exists", msg:"Listener already exists"}
+									} else {
+										listeners[rssListener.id] = {"feed":rssListener.feed, "interval":rssListener.interval};
+										client.irc.privmsg(target, style.lightgreen+"Listener added");
 									}
 								}
-								latestItem = namepluslink;
-								func(thisItem);
 							}
-						} else {
-							throw {name:"RSS Error", msg:"There was an error with that resource"}
+							client.irc.privmsg(target, style.orange+"WOAHH");
+							latestItem = namepluslink;
+							func(thisItem);
+							ok = true;
 						}
-					});
-				} else {
-					throw {name:"RSS Error", msg:"There was an error with that resource"}
-				}
-				firstIteration = false;
-				return addFeed;
-			} catch (err){
-				if (err.stack === undefined){
-					client.irc.privmsg(target, style.lightred+err.msg);
-				} else {
-					client.irc.privmsg(target, style.lightred+"There was an error");
-					console.log(err.stack);
-				}
-				clearInterval(intervalId);
+					} else {
+						throw {name:"RSS Error", msg:"There was an error with that resource"}
+					}
+				});
+			} else {
+				throw {name:"RSS Error", msg:"There was an error with that resource"}
 			}
-		});
+			firstIteration = false;
+			//return addFeed;
+		} catch (err){
+			if (err.stack === undefined){
+				client.irc.privmsg(target, style.lightred+err.msg);
+			} else {
+				client.irc.privmsg(target, style.lightred+"There was an error");
+				console.log(err.stack);
+			}
+		}
 		return addFeed;
 	}(true), rssListener.interval);
+	if (ok) return intervalId;
+	else clearInterval(intervalId);
 }
 	
 api.hookEvent('*', 'registered', function(msg) {
@@ -395,6 +407,7 @@ api.hookEvent('*', 'registered', function(msg) {
 });
 
 api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, username, hostname, target, message, time and raw
+	console.log("<"+msg.username+"> "+msg.message); // Prints every chat message to console
 	msg["isPm"] = (msg.target == myNick) ? true : false;
 	var target = (msg.isPm) ? msg.username : msg.target;
 	msg["isCmd"] = (msg.message[0] == "!") ? true : false;
@@ -405,7 +418,7 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 			var cmd = cmds[args[0]];
 			var where;
 			if (cmd.any !== undefined){
-				where = "any";	
+				where = "any";
 			} else{
 				where = (msg.isPm) ? "pm" : "chan";	
 			}
