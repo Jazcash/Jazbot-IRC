@@ -1,0 +1,15 @@
+{
+  "botnick": "Jazbot",
+  "botuser": "Jazbot",
+  "realname": "Jazbot",
+  "server": "irc.w3.org",
+  "port": 6667,
+  "channels": [
+    "#test"
+  ],
+  "lastfm": {
+    "apikey": "API KEY GOES HERE",
+    "secret": "SECRET GOES HERE"
+  },
+  "lyricsnmusicApiKey": "API KEY GOES HERE"
+}
