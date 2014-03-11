@@ -6,7 +6,7 @@ var fs = require('fs');
 // Third-party imports
 var factory = require('irc-factory');
 var bcrypt = require('bcrypt-nodejs');
-var Twit = require('twit');
+//var Twit = require('twit');
 var LastFmNode = require('lastfm').LastFmNode;
 var request = require('request');
 var parseString = require('xml2js').parseString;
@@ -42,11 +42,11 @@ var client = api.createClient('jazbot', {
 });
 
 var lastfm = new LastFmNode({
-	api_key: config.lastfm.apikey, //	'344c82f3551caf9189cf76653586219d',
-	secret: config.lastfm.secret	 //	'59d8aca13f9d7066447dec40778ff81f'
+	api_key: config.lastfm.apikey,
+	secret: config.lastfm.secret
 });
 
-var initialChannels = config.channels; // ["#ectest4 testytttr"];
+var initialChannels = config.channels;
 var myNick = null;
 var	owner = null;
 var votename, opt1, opt2, voteinprogress, eligible, maxvotes;
@@ -245,13 +245,27 @@ var cmds =
 							if (lyricsstr.length > 0) client.irc.privmsg(target, style.pink+lyricsstr);
 						}
 					} else {
-						console.log(error);	
+						console.log(error);
 					}
 				});
 			}
-			trackStream.on('error', function(error) {
-				client.irc.privmsg(target, style.lightred+"There was an error with that command, make sure the username exists");
-				console.log(error);
+			trackStream.on('error', function(err) {
+				//client.irc.privmsg(target, style.lightred+"There was an error with that command, make sure the username exists");
+				switch(err.error){
+					case 10:
+						client.irc.privmsg(target, style.lightred+"The set API key is invalid");
+						break;
+					case 6:
+						client.irc.privmsg(target, style.lightred+"No user with that last.fm username was found");
+						break;
+					default:
+						if ((err.message) == "Unexpected response"){
+							client.irc.privmsg(target, style.lightred+"There was an error. Has "+user+" listened to any tracks yet?");
+						} else {
+							client.irc.privmsg(target, style.lightred+"There was an uncaught error - Please see the console");
+							if (err.stack !== undefined) console.log(err.stack);
+						}
+				}
 			});
 			trackStream.start();
 			trackStream.stop();
@@ -266,6 +280,12 @@ var cmds =
 			});
 		}
 	},
+	"!unlisten":{
+		"any":{"auth":false, "reqArgs":1, "synopsis":"!unlisten <name>"}, 
+		"func":function(msg, target, args){
+						
+		}
+	},
 	"!subscribe":{
 		"any":{"auth":false, "reqArgs":2, "synopsis":"!subscribe <name> <rss xml> [interval - default=1min]"}, 
 		"func":function(msg, target, args){
@@ -273,6 +293,12 @@ var cmds =
 			onNewRSSItem(rssListener, true, target, function(item){
 				client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
 			});
+		}
+	},
+	"!unsubscribe":{
+		"any":{"auth":false, "reqArgs":1, "synopsis":"!unsubscribe <name>"}, 
+		"func":function(msg, target, args){
+			
 		}
 	},
 }
