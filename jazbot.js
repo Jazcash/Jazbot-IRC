@@ -14,22 +14,39 @@ var JSONFile = require('json-tu-file');
 // My imports
 var style = require('./styles.js');
 
+var config;
+if (fs.existsSync("config.json")){
+	config = JSONFile.readFileSync("config.json");
+} else {
+	config = {
+		"botnick":"Jazbot",
+		"botuser":"Jazbot",
+		"realname":"Jazbot",
+		"server":"irc.w3.org",
+		"port":6667,
+		"channels":["#test"],
+		"lastfm":{"apikey":"API KEY GOES HERE", "secret":"SECRET GOES HERE"},
+		"lyricsnmusicApiKey":"API KEY GOES HERE",
+	}
+	JSONFile.writeFileSync(config, 'config.json', {encoding: 'utf-8'});
+}
+
 var api = new factory.Api();
 var client = api.createClient('jazbot', {
-	nick : "Jazbot",
-	user : "Jazbot",
-	server : 'irc.w3.org',
-	realname: "Jazbot",
-	port: 6667,
+	nick : config.botnick,
+	user : config.botuser,
+	server : config.server,
+	realname: config.realname,
+	port: config.port,
 	secure: false
 });
 
 var lastfm = new LastFmNode({
-	api_key: '344c82f3551caf9189cf76653586219d',
-	secret: '59d8aca13f9d7066447dec40778ff81f'
+	api_key: config.lastfm.apikey, //	'344c82f3551caf9189cf76653586219d',
+	secret: config.lastfm.secret	 //	'59d8aca13f9d7066447dec40778ff81f'
 });
 
-var initialChannels = ["#ectest4 testytttr"];
+var initialChannels = config.channels; // ["#ectest4 testytttr"];
 var myNick = null;
 var	owner = null;
 var votename, opt1, opt2, voteinprogress, eligible, maxvotes;
@@ -205,7 +222,7 @@ var cmds =
 				done = true;
 			});
 			function displayLyric(track){
-				var url = "http://api.lyricsnmusic.com/songs?api_key=dc39e7acfff0229686345352f3c541&artist="+track.artist["#text"]+"&track="+track.name;
+				var url = "http://api.lyricsnmusic.com/songs?api_key="+config.lyricsnmusicApiKey+"&artist="+track.artist["#text"]+"&track="+track.name;
 				request(url, function (error, response, body) {
 					if (!error && response.statusCode == 200) {
 						var track = JSON.parse(body)[0];
@@ -227,11 +244,14 @@ var cmds =
 							}
 							if (lyricsstr.length > 0) client.irc.privmsg(target, style.pink+lyricsstr);
 						}
+					} else {
+						console.log(error);	
 					}
 				});
 			}
 			trackStream.on('error', function(error) {
 				client.irc.privmsg(target, style.lightred+"There was an error with that command, make sure the username exists");
+				console.log(error);
 			});
 			trackStream.start();
 			trackStream.stop();
@@ -255,23 +275,14 @@ var cmds =
 			});
 		}
 	},
-	"!print":{
-		"any":{"auth":false, "reqArgs":0, "synopsis":"!subscribe <rss xml>"}, 
-		"func":function(msg, target, args){
-			if (fs.existsSync("subscriptions")) {
-				//client.irc.privmsg(target, subscriptions);
-				console.log(subscriptions);
-			}
-		}
-	},
 }
 
 var listeners = {};
 
 function getSubscriptions(){
 	var data;
-	if (fs.existsSync("subscriptions.dat")){
-		data = JSONFile.readFileSync("subscriptions.dat");
+	if (fs.existsSync("subscriptions.json")){
+		data = JSONFile.readFileSync("subscriptions.json");
 	} else {
 		data = {};	
 	}
@@ -281,7 +292,7 @@ function getSubscriptions(){
 function addSubscription(sub){
 	var subs = getSubscriptions();
 	subs[sub.id] = {"feed":sub.feed, "interval":sub.interval};
-	JSONFile.writeFileSync(subs, 'subscriptions.dat', {encoding: 'utf-8'});
+	JSONFile.writeFileSync(subs, 'subscriptions.json', {encoding: 'utf-8'});
 }
 
 function onNewRSSItem(rssListener, subscription, target, func){
@@ -349,8 +360,6 @@ function onNewRSSItem(rssListener, subscription, target, func){
 		return addFeed;
 	}(true), rssListener.interval);
 }
-	
-//throw {name:"System Error", message:"There was an error with that resource"}
 	
 api.hookEvent('*', 'registered', function(msg) {
 	myNick = msg.nickname;
