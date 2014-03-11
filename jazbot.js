@@ -1,7 +1,4 @@
 "use strict";
-/* 	##################
-		Author: Jazcash
- 		################## */
 // Built-in imports
 var sys = require('sys');
 var exec = require('child_process').exec;
@@ -13,13 +10,9 @@ var Twit = require('twit');
 var LastFmNode = require('lastfm').LastFmNode;
 var request = require('request');
 var parseString = require('xml2js').parseString;
+var JSONFile = require('json-tu-file');
 // My imports
 var style = require('./styles.js');
-
-var lastfm = new LastFmNode({
-	api_key: '344c82f3551caf9189cf76653586219d',
-	secret: '59d8aca13f9d7066447dec40778ff81f'
-});
 
 var api = new factory.Api();
 var client = api.createClient('jazbot', {
@@ -31,10 +24,15 @@ var client = api.createClient('jazbot', {
 	secure: false
 });
 
-var initialChannels = ["#ectest4 testy4"];
+var lastfm = new LastFmNode({
+	api_key: '344c82f3551caf9189cf76653586219d',
+	secret: '59d8aca13f9d7066447dec40778ff81f'
+});
+
+var initialChannels = ["#ectest4 testytttr"];
 var myNick = null;
 var	owner = null;
-var info = {};
+var votename, opt1, opt2, voteinprogress, eligible, maxvotes;
 
 var cmds =
 {
@@ -126,59 +124,59 @@ var cmds =
 			}
 		}
 	},
-	"!callvote":{
-		"chan":{"auth":false, "reqArgs":1, "synopsis":"!callvote <votename>"},
+	"!callvote":{ // Discontinued voting until irc-factory supports better info grabbing
+		"chan":{"auth":true, "reqArgs":1, "synopsis":"!callvote <votename>"},
 		"func":function(msg, target, args){
-			if (info.voteinprogress === undefined || info.voteinprogress == false){
-				info["votename"] = args[1];
-				info["eligible"] = [];
-				info["opt1"] = 0;
-				info["opt2"] = 0;
-				info["voteinprogress"] = true;
+			if (voteinprogress === undefined || voteinprogress == false){
+				votename = args[1];
+				eligible = [];
+				opt1 = 0;
+				opt2 = 0;
+				voteinprogress = true;
 				client.irc.raw("LIST", target);
 				api.hookEvent('*', 'list', function(list) {
 					var users = list.list[0].users-1;
-					info["maxvotes"] = users;
+					maxvotes = users;
 					api.unhookEvent('*', 'list');
 				});
-				client.irc.privmsg(target, style.blue+msg.nickname+" called a vote: "+info.votename+". !vote y,1,n,2 to cast your vote");
+				client.irc.privmsg(target, style.blue+msg.nickname+" called a vote: "+votename+". !vote y,1,n,2 to cast your vote");
 				setTimeout(function () {
-					info.voteinprogress = false;
+					voteinprogress = false;
 					var winnerstr;
-					var winnerstr = (info.opt1 > info.opt2) ? "Option 1!" : "Option 2!";
+					var winnerstr = (opt1 > opt2) ? "Option 1!" : "Option 2!";
 					client.irc.privmsg(target, style.blue+"Time up, vote ended - Winner is "+winnerstr);
-					info["eligible"] = [];
+					eligible = [];
 				}, 5000)
 			} else {
 				client.irc.privmsg(target, style.red+"Vote already in progress");
 			}
 		}
 	},
-	"!vote":{
-		"chan":{"auth":false, "reqArgs":1, "synopsis":"!vote <option>(y,1,n,2)"},
+	"!vote":{ // Discontinued voting until irc-factory supports better info grabbing
+		"chan":{"auth":true, "reqArgs":1, "synopsis":"!vote <option>(y,1,n,2)"},
 		"func":function(msg, target, args){
-			if (info.voteinprogress){
-				if (info.eligible.indexOf(msg.username) == -1){
+			if (voteinprogress){
+				if (eligible.indexOf(msg.username) == -1){
 					if (args[1] == "1" || args[1] == "y"){
-						info.opt1 += 1;
-						client.irc.privmsg(target, style.blue+info.votename+" - Yes="+info.opt1+"/"+info.maxvotes+" | No="+info.opt2+"/"+info.maxvotes);
+						opt1 += 1;
+						client.irc.privmsg(target, style.blue+votename+" - Yes="+opt1+"/"+maxvotes+" | No="+opt2+"/"+maxvotes);
 					} else if(args[1] == "2" || args[1] == "n"){
-						info.opt2 += 1;
-						client.irc.privmsg(target, style.blue+info.votename+" - Yes="+info.opt1+"/"+info.maxvotes+" | No="+info.opt2+"/"+info.maxvotes);
+						opt2 += 1;
+						client.irc.privmsg(target, style.blue+votename+" - Yes="+opt1+"/"+maxvotes+" | No="+opt2+"/"+maxvotes);
 					}
-					console.log("opt1"+info.opt1);
-					info.eligible += msg.username;
+					console.log("opt1"+opt1);
+					eligible += msg.username;
 				} else {
 					client.irc.privmsg(target, style.lightred+"You have already voted "+msg.nickname+"!");
 				}
 			} else {
 				client.irc.privmsg(target, style.lightred+"No vote is in progress!");
 			}
-			if (info.opt1+info.opt2 == info.maxvotes){
-				info.voteinprogress = false;
-				var winnerstr = (info.opt1 > info.opt2) ? "Option 1!" : "Option 2!";
+			if (opt1+opt2 == maxvotes){
+				voteinprogress = false;
+				var winnerstr = (opt1 > opt2) ? "Option 1!" : "Option 2!";
 				client.irc.privmsg(target, style.blue+"Vote ended - Winner is "+winnerstr);
-				info["eligible"] = [];
+				eligible = [];
 			}
 		}
 	},
@@ -189,7 +187,7 @@ var cmds =
 			try {
 			var trackStream = lastfm.stream(user);
 			} catch (err){
-				console.log(err);	
+				console.log(err);
 			}
 			var done = false;
 			trackStream.on('nowPlaying', function(track) {
@@ -240,57 +238,120 @@ var cmds =
 		}
 	},
 	"!listen":{
-		"any":{"auth":false, "reqArgs":1, "synopsis":"!listen <rss xml>"},
+		"any":{"auth":false, "reqArgs":2, "synopsis":"!listen <name> <rss xml> [interval - default=1min]"},
 		"func":function(msg, target, args){
-			if (args.length > 1){
-					onNewRSSItem(args[1], 1000, function(item){
-					client.irc.privmsg(target, style.blue+item.title + ": "+item.link);
-				});
-			}
-			/*onNewRSSItem("http://feeds.bbci.co.uk/news/rss.xml?edition=int", 1000, function(item){
-				client.irc.privmsg(target, style.blue+item.title + ": "+item.link);
+			var rssListener = {"id":args[1], "feed":args[2], "interval":(args.length > 3) ? args[3] : 60000};
+			onNewRSSItem(rssListener, false, target, function(item){
+				client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
 			});
-			onNewRSSItem("http://feeds.arstechnica.com/arstechnica/index?format=xml", 1000, function(item){
-				client.irc.privmsg(target, style.blue+item.title + ": "+item.link);
-			});*/
-			function onNewRSSItem(feed, interval, func){
-				var latestItem = null;
-				var intervalId = setInterval(function(){
-					request(feed, function (error, response, body) {
-						if (error == null && response.statusCode == 200) {
-							var xml = body;
-							parseString(xml, function (err, result) {
-								var type;
-								if ("rss" in result) type = "rss"
-								else if("feed" in result) type = "feed"
-								var thisItem;
-								if (type == "rss") thisItem = result.rss.channel[0].item[0]
-								else if(type == "feed") thisItem = result.feed.entry[0];
-								if (thisItem !== undefined){
-									//console.log(thisItem);
-									if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
-									else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
-									var namepluslink = thisItem.name + thisItem.link;
-									if (namepluslink != latestItem){
-										latestItem = namepluslink;
-										func(thisItem);
-									}
-								} else {
-									client.irc.privmsg(target, style.lightred+"There was an error with that resource");
-									clearInterval(intervalId);
-								}
-							});
-						} else {
-							client.irc.privmsg(target, style.lightred+"There was an error with that resource");
-							clearInterval(intervalId);
-						}
-					});
-				}, interval);
+		}
+	},
+	"!subscribe":{
+		"any":{"auth":false, "reqArgs":2, "synopsis":"!subscribe <name> <rss xml> [interval - default=1min]"}, 
+		"func":function(msg, target, args){
+			var rssListener = {"id":args[1], "feed":args[2], "interval":(args.length > 3) ? args[3] : 60000};
+			onNewRSSItem(rssListener, true, target, function(item){
+				client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
+			});
+		}
+	},
+	"!print":{
+		"any":{"auth":false, "reqArgs":0, "synopsis":"!subscribe <rss xml>"}, 
+		"func":function(msg, target, args){
+			if (fs.existsSync("subscriptions")) {
+				//client.irc.privmsg(target, subscriptions);
+				console.log(subscriptions);
 			}
 		}
 	},
 }
 
+var listeners = {};
+
+function getSubscriptions(){
+	var data;
+	if (fs.existsSync("subscriptions.dat")){
+		data = JSONFile.readFileSync("subscriptions.dat");
+	} else {
+		data = {};	
+	}
+	return data;
+}
+
+function addSubscription(sub){
+	var subs = getSubscriptions();
+	subs[sub.id] = {"feed":sub.feed, "interval":sub.interval};
+	JSONFile.writeFileSync(subs, 'subscriptions.dat', {encoding: 'utf-8'});
+}
+
+function onNewRSSItem(rssListener, subscription, target, func){
+	var latestItem = null;
+	var intervalId = setInterval(function addFeed(firstIteration){
+		if (firstIteration === undefined) firstIteration = false;
+		request(rssListener.feed, function (error, response, body) {
+			try {
+				if (error == null && response.statusCode == 200) {
+					var xml = body;
+					parseString(xml, function (err, result) {
+						var type;
+						if ("rss" in result) type = "rss"
+						else if("feed" in result) type = "feed"
+						var thisItem;
+						if (type == "rss") thisItem = result.rss.channel[0].item[0]
+						else if(type == "feed") thisItem = result.feed.entry[0];
+						if (thisItem !== undefined){
+							//console.log(thisItem);
+							if (type == "rss") thisItem = {"title":thisItem.title[0], "link":thisItem.link[0], "id": thisItem.guid[0]}
+							else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
+							var namepluslink = thisItem.name + thisItem.link;
+							if (namepluslink != latestItem){
+								if (firstIteration){
+									if (subscription){ // !subscribe
+										console.log(getSubscriptions());
+										console.log(rssListener.id);
+										if (rssListener.id in getSubscriptions()){
+											throw {name:"Subscription Exists", msg:"Subscription already exists"}
+										} else {
+											addSubscription(rssListener);
+											client.irc.privmsg(target, style.lightgreen+"Subscription added");
+										}
+									} else { // !listen
+										if (rssListener.id in listeners){
+											throw {name:"Listener Exists", msg:"Listener already exists"}
+										} else {
+											listeners[rssListener.id] = {"feed":rssListener.feed, "interval":rssListener.interval};
+											client.irc.privmsg(target, style.lightgreen+"Listener added");
+										}
+									}
+								}
+								latestItem = namepluslink;
+								func(thisItem);
+							}
+						} else {
+							throw {name:"RSS Error", msg:"There was an error with that resource"}
+						}
+					});
+				} else {
+					throw {name:"RSS Error", msg:"There was an error with that resource"}
+				}
+				firstIteration = false;
+				return addFeed;
+			} catch (err){
+				if (err.stack === undefined){
+					client.irc.privmsg(target, style.lightred+err.msg);
+				} else {
+					client.irc.privmsg(target, style.lightred+"There was an error");
+					console.log(err.stack);
+				}
+				clearInterval(intervalId);
+			}
+		});
+		return addFeed;
+	}(true), rssListener.interval);
+}
+	
+//throw {name:"System Error", message:"There was an error with that resource"}
+	
 api.hookEvent('*', 'registered', function(msg) {
 	myNick = msg.nickname;
 	for (var i in initialChannels){
@@ -303,7 +364,6 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 	var target = (msg.isPm) ? msg.username : msg.target;
 	msg["isCmd"] = (msg.message[0] == "!") ? true : false;
 	msg ["auth"] = (msg.username == owner) ? true : false;
-	
 	if (msg.isCmd) {
 		var args = msg.message.split(" ");
 		if (cmds[args[0]] !== undefined){
@@ -317,12 +377,7 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 			if (cmd[where] !== undefined || (cmd.pm === undefined && cmd.chan === undefined)){
 				if ((cmd[where].auth && msg.auth) || !cmd[where].auth){
 					if (args.length-1 >= cmd[where].reqArgs){
-						try {
-							cmd.func(msg, target, args);
-						} catch (err){
-							client.irc.privmsg(target, style.lightred+"Fatal Error");
-							console.log(err);
-						}
+						cmd.func(msg, target, args);
 					} else {
 						client.irc.privmsg(target, style.lightred+"More args required - SYNOPSIS: "+cmd[where].synopsis);
 					}
