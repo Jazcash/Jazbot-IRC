@@ -18,17 +18,15 @@ var config;
 if (fs.existsSync("config.json")){
 	config = JSONFile.readFileSync("config.json");
 } else {
-	config = {
-		"botnick":"Jazbot",
-		"botuser":"Jazbot",
-		"realname":"Jazbot",
-		"server":"irc.w3.org",
-		"port":6667,
-		"channels":["#test"],
-		"lastfm":{"apikey":"API KEY GOES HERE", "secret":"SECRET GOES HERE"},
-		"lyricsnmusicApiKey":"API KEY GOES HERE",
-	}
-	JSONFile.writeFileSync(config, 'config.json', {encoding: 'utf-8'});
+	console.log("No config.json file found");
+	process.exit();
+}
+
+var listeners = {"subscribes":{},"listens":{}};
+if (fs.existsSync("subscriptions.json")){
+	listeners["subscribes"] = JSONFile.readFileSync("subscriptions.json");
+} else {
+	JSONFile.writeFileSync({}, 'subscriptions.json');	
 }
 
 var api = new factory.Api();
@@ -275,67 +273,89 @@ var cmds =
 	"!listen":{
 		"any":{"auth":false, "reqArgs":2, "synopsis":"!listen <name> <rss xml> [interval in seconds - default = 60]"},
 		"func":function(msg, target, args){
-			listenerFunction(msg, target, args, false);
+			var id = args[1];
+			var feed = args[2]
+			var interval = (args.length > 3) ? args[3]*1000 : 60000;
+			var where = (args.length > 4) ? args[4] : target;
+			if (!(id in listeners)){
+				addListener(id, feed, interval, where);
+			} else {
+				client.irc.privmsg(target, style.lightred+"Listener already exists");
+			}
+			function addListener(id, feed, interval, target){
+				var setInterval = listen(id, feed, interval, target);
+				if (setInterval !== undefined){
+					listeners["listens"][id] = {"feed":feed, "interval":interval, "target":target, "setInterval":setInterval};
+				}
+			}
 		}
 	},
 	"!unlisten":{
-		"any":{"auth":false, "reqArgs":1, "synopsis":"!unlisten <name>"}, 
+		"any":{"auth":false, "reqArgs":1, "synopsis":"!unlisten <id>"}, 
 		"func":function(msg, target, args){
-						
+			var id = args[1];
+			if (id in listeners["listens"]){
+				clearInterval(listeners["listens"][id].setInterval);
+				delete listeners["listens"][id];
+				client.irc.privmsg(target, style.lightgreen+"Listener cleared");
+			} else {
+				client.irc.privmsg(target, style.lightred+"That listener does not exist");
+			}
 		}
 	},
 	"!subscribe":{
-		"any":{"auth":true, "reqArgs":2, "synopsis":"!subscribe <name> <rss xml> [interval - default=1min]"}, 
+		"any":{"auth":true, "reqArgs":2, "synopsis":"!subscribe <id> <rss xml> [interval - default=1min] [target - default=this]"}, 
 		"func":function(msg, target, args){
-			listenerFunction(msg, target, args, true);
+			var id = args[1];
+			var feed = args[2]
+			var interval = (args.length > 3) ? args[3]*1000 : 60000;
+			var where = (args.length > 4) ? args[4] : target;
+			var subscriptions = JSONFile.readFileSync('subscriptions.json');
+			if (!(id in subscriptions)){
+				addSubscription(id, feed, interval, where);
+			} else {
+				client.irc.privmsg(target, style.lightred+"Subscription already exists");
+			}
+			function addSubscription(id, feed, interval, target){
+				var setInterval = listen(id, feed, interval, target);
+				if (setInterval !== undefined){
+					subscriptions[id] = {"feed":feed, "interval":interval, "target":target};
+					listeners["subscribes"][id] = {"feed":feed, "interval":interval, "target":target, "setInterval":setInterval};
+					JSONFile.writeFileSync(subscriptions, 'subscriptions.json');
+				}
+			}
 		}
 	},
 	"!unsubscribe":{
 		"any":{"auth":false, "reqArgs":1, "synopsis":"!unsubscribe <name>"}, 
 		"func":function(msg, target, args){
-			
+			var id = args[1];
+			if (id in listeners["subscribes"]){
+				clearInterval(listeners["subscribes"][id].setInterval);
+				delete listeners["subscribes"][id];
+				var subscriptions = JSONFile.readFileSync('subscriptions.json');
+				delete subscriptions[id];
+				JSONFile.writeFileSync(subscriptions, 'subscriptions.json');
+				client.irc.privmsg(target, style.lightgreen+"Subscription cleared");
+			} else {
+				client.irc.privmsg(target, style.lightred+"That subscription does not exist");
+			}
+		}
+	},
+	"!test":{
+		"any":{"auth":false, "reqArgs":0, "synopsis":"!test"}, 
+		"func":function(msg, target, args){
+			console.log(listeners);
 		}
 	},
 }
 
-var listeners = {};
-
-function getSubscriptions(){
-	var data;
-	if (fs.existsSync("subscriptions.json")){
-		data = JSONFile.readFileSync("subscriptions.json");
-	} else {
-		data = {};	
-	}
-	return data;
-}
-
-function addSubscription(sub){
-	var subs = getSubscriptions();
-	subs[sub.id] = {"feed":sub.feed, "interval":sub.interval};
-	JSONFile.writeFileSync(subs, 'subscriptions.json', {encoding: 'utf-8'});
-}
-
-function listenerFunction(msg, target, args, isSubscription){
-	var interval = (args.length > 3) ? args[3]*1000 : 60000;
-	console.log(interval);
-	if (interval >= 5000){
-		var rssListener = {"id":args[1], "feed":args[2], "interval":interval};
-		var thing = onNewRSSItem(rssListener, isSubscription, target, function(item){
-			client.irc.privmsg(target, style.darkblue+rssListener.id+" - "+style.blue+item.title + ": "+item.link);
-		});
-		//if (thing !== undefined) console.log(thing);
-	} else {
-		client.irc.privmsg(target, style.lightred+"Interval must be 5 seconds or greater");
-	}
-}
-
-function onNewRSSItem(rssListener, subscription, target, func){
+function listen(id, feed, interval, target){
 	var latestItem = null;
 	var ok = false;
 	var intervalId = setInterval(function addFeed(firstIteration){
 		if (firstIteration === undefined) firstIteration = false;
-		var response = requestsync(rssListener.feed);
+		var response = requestsync(feed);
 		var body = response.body;
 		try {
 			if (response.statusCode == 200) {
@@ -353,27 +373,10 @@ function onNewRSSItem(rssListener, subscription, target, func){
 						else if(type == "feed") thisItem = {"title":thisItem.title[0]._, "link":thisItem.link[0].$.href, "id":thisItem.id[0]}
 						var namepluslink = thisItem.name + thisItem.link;
 						if (namepluslink != latestItem){
-							console.log(firstIteration)
-							if (firstIteration){
-								if (subscription){ // !subscribe
-									if (rssListener.id in getSubscriptions()){
-										throw {name:"Subscription Exists", msg:"Subscription already exists"}
-									} else {
-										addSubscription(rssListener);
-										client.irc.privmsg(target, style.lightgreen+"Subscription added");
-									}
-								} else { // !listen
-									if (rssListener.id in listeners){
-										throw {name:"Listener Exists", msg:"Listener already exists"}
-									} else {
-										listeners[rssListener.id] = {"feed":rssListener.feed, "interval":rssListener.interval};
-										client.irc.privmsg(target, style.lightgreen+"Listener added");
-									}
-								}
-							}
-							client.irc.privmsg(target, style.orange+"WOAHH");
+							if (firstIteration) client.irc.privmsg(target, style.lightgreen+"Listener added");
 							latestItem = namepluslink;
-							func(thisItem);
+							//func(thisItem);
+							client.irc.privmsg(target, style.darkblue+id+" - "+style.blue+thisItem.title + ": "+thisItem.link);
 							ok = true;
 						}
 					} else {
@@ -394,15 +397,20 @@ function onNewRSSItem(rssListener, subscription, target, func){
 			}
 		}
 		return addFeed;
-	}(true), rssListener.interval);
-	if (ok) return intervalId;
-	else clearInterval(intervalId);
+	}(true), interval);
+	if (!ok) clearInterval(intervalId);
+	if (intervalId !== undefined && ok) return intervalId;
 }
 	
 api.hookEvent('*', 'registered', function(msg) {
 	myNick = msg.nickname;
 	for (var i in initialChannels){
 		client.irc.join(initialChannels[i].split(" ")[0], initialChannels[i].split(" ")[1]);
+	}
+	var subscriptions = JSONFile.readFileSync('subscriptions.json');
+	for (var id in subscriptions){
+		var setInterval = listen(id, subscriptions[id].feed, subscriptions[id].interval, subscriptions[id].target);
+		listeners["subscribes"][id] = {"feed":subscriptions[id].feed, "interval":subscriptions[id].interval, "target":subscriptions[id].target, "setInterval":setInterval};
 	}
 });
 
@@ -442,6 +450,17 @@ api.hookEvent('*', 'privmsg', function(msg) { // message contains nickname, user
 
 process.on('SIGINT', function() {
 	client.irc.disconnect("Shutdown from CLI");
-  console.log("\nGracefully shutting down from SIGINT (Ctrl-C)" );
+  console.log("\nGracefully shutting down from signal interupt" );
   process.exit();
 });
+
+/*process.on('exit', function(){
+	console.log("exiting...");
+	process.exit();
+});
+
+process.on('uncaughtException', function(e){
+	console.log("Uncaught exception");
+	console.log(e.stack);
+	process.exit();
+});*/
