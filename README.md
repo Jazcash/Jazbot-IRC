@@ -3,12 +3,18 @@ Jazbot
 
 My Node-JS IRC bot!
 
-##Dependencies
-
-* node-irc
-* bcrypt-nodejs
-* last-fm
-
 ##Usage
 
 `node jazbot.js`
+
+##Available Commands
+
+`!hi`
+`!join`
+`!leave`
+`!quit`
+`!lastfm`
+`!listen`
+`!subscribe`
+`!setpass`
+`!auth`
