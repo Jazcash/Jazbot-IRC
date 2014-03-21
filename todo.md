@@ -1,11 +1,15 @@
+* Complete refactor, OOP
 * Make README.md useful
 * Urban Dictionary scraping related command
 * !help [cmd]
 * Aliases for !twit
-* Make second !define parameter the definition result number, not max results; show number of results in privmsg
-* More error handling:
-```
-TypeError: Cannot read property 'children' of undefined                                                                                                                               
-at process (/home/action/workspace/repositories/Jazbot/jazbot.js:191:33)                                                                                                          
-at Request._callback (/home/action/workspace/repositories/Jazbot/jazbot.js:208:16)
-```
+* More error handling
+* Deutsch Bahn cmd (Scraping)
+* Make spellchecker and synonym cmds work through the google definitions
+* CLI/Bash style inline cmd parsing (Something like `!define {!random}` would be possible
+* Allow auth to bypass rate limits
+* !danger gets random thread image from /r/fiftyfifty
+* !google does a web search for parameter
+* Remove random image from !image
+* !randstr gets a random word
+* !randnum
