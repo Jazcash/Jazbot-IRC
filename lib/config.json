@@ -5,11 +5,13 @@
   "server": "irc.w3.org",
   "port": 6667,
   "channels": [
-    "#test"
+    "#jazbot",
+    "#ectest5 jaztest"
   ],
+  "authpass": "$2a$10$T4qOMnZ8JUHwPpNZJioeVeC4Cm/vB4G5mMjb9UWcuoTwhDf6oshMq",
   "lastfm": {
-    "apikey": "API KEY GOES HERE",
-    "secret": "SECRET GOES HERE"
+    "apikey": "344c82f3551caf9189cf76653586219d",
+    "secret": "59d8aca13f9d7066447dec40778ff81f"
   },
-  "lyricsnmusicApiKey": "API KEY GOES HERE"
+  "lyricsnmusicApiKey": "7a0f1d81d45820391d9b4158e6000f"
 }
