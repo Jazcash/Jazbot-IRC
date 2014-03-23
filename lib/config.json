@@ -8,6 +8,9 @@
     "#jazbot",
     "#ectest5 jaztest"
   ],
+  "ignore": [
+		
+  ],
   "authpass": "$2a$10$T4qOMnZ8JUHwPpNZJioeVeC4Cm/vB4G5mMjb9UWcuoTwhDf6oshMq",
   "lastfm": {
     "apikey": "344c82f3551caf9189cf76653586219d",
