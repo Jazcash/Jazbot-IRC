@@ -1,0 +1,19 @@
+{
+  "botnick": "Jazbot",
+  "botuser": "Jazbot",
+  "realname": "Jazbot",
+  "server": "irc.w3.org",
+  "port": 6667,
+  "channels": [
+    "#jazbot"
+  ],
+  "ignore": [
+		
+  ],
+  "authpass": "",
+  "lastfm": {
+    "apikey": "",
+    "secret": ""
+  },
+  "lyricsnmusicApiKey": ""
+}
