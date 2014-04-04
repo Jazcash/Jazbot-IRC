@@ -8,10 +8,11 @@ My Node-JS IRC bot!
 `node jazbot.js`
 Use `!help` to list all available commands to you (only ones you have permission to use will be shown) and `!help <cmd>` to show help for a specific command.
 
-##Todo
+##ToDo
 
 ###General
 
+* Turn this ToDo list into separate issues on Github!
 * Make a package.json
 
 ###Jazbot Core
