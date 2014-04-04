@@ -1,0 +1,45 @@
+{
+    "name": "jazbot",
+    "preferGlobal": false,
+    "version": "0.1.0",
+    "author": "Jazcash <jaspercashmore@gmail.com>",
+    "description": "My IRC bot! Has many built-in commands and easy support for adding your own",
+    "contributors": [
+        {
+            "name": "Jasper Cashmore",
+            "email": "jaspercashmore@gmail.com"
+        }
+    ],
+    "scripts": {
+        "start": "node jazbot.js"
+    },
+    "main": "./lib/jazbot.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Jazcash/Jazbot"
+    },
+    "keywords": [
+        "jazbot",
+        "jazcash",
+        "irc",
+        "bot"
+    ],
+    "dependencies": {
+        "irc-factory": "1.x.x",
+        "xml2js": "0.x.x",
+        "validator": "3.x.x",
+        "request": "2.x.x",
+        "request-sync": "0.x.x",
+        "lastfm": "0.x.x",
+        "json-tu-file": "1.x.x",
+        "bcrypt-nodejs": "0.x.x",
+        "cheerio": "0.x.x",
+        "date-utils": "1.x.x"
+    },
+    "analyze": false,
+    "bundledDependencies": [],
+    "license": "MIT",
+    "engines": {
+        "node": ">=0.10.11"
+    }
+}
