@@ -1,5 +1,6 @@
 {
     "name": "jazbot",
+    "private": true,
     "preferGlobal": false,
     "version": "0.1.0",
     "author": "Jazcash <jaspercashmore@gmail.com>",
