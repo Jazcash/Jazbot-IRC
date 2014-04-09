@@ -15,15 +15,11 @@ and `!help <cmd>` to show help for a specific command.
 
 ###CLI Options
 
-`--server <server>[:port]`
-
-`--channels <#channel>[ pass][,#channel2]`
-
-`--nick <botnickname>`
-
-`--user <botusername>`
-
-`--bio <information>`
+`--server <server>[:port]`  
+`--channels <#channel>[ pass][,#channel2]`  
+`--nick <botnickname>`  
+`--user <botusername>`  
+`--bio <information>`  
 
 Note that any of these options are optional, so long as they're specified in the config.json. 
 
