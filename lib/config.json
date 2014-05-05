@@ -1,16 +1,15 @@
 {
-	"botnick": "Jazbot",
-	"botuser": "Jazbot",
-	"realname": "Jazbot",
-	"server": "irc.w3.org",
-	"port": 6667,
-	"channels": [
-		"#jazbot",
-		"#ectest5 jaztest"
-	],
-	"ignore": [
-		
-	],
+  "botnick": "Jazbot",
+  "botuser": "Jazbot",
+  "realname": "Jazbot",
+  "server": "irc.w3.org",
+  "port": 6667,
+  "channels": [
+    "#jazbot",
+    "#ectest5 jaztest"
+  ],
+  "ignore": [],
   "lastfmapikey": "344c82f3551caf9189cf76653586219d",
-  "lyricsnmusicapikey": "f6b1c04a52616ac22a60ca9c8dfa15"
+  "lyricsnmusicapikey": "f6b1c04a52616ac22a60ca9c8dfa15",
+  "authpass": "tim"
 }
