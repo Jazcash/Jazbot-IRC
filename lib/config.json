@@ -1,15 +1,14 @@
 {
   "botnick": "Jazbot",
   "botuser": "Jazbot",
-  "realname": "Jazbot",
+  "bio": "I'm Jazbot! Use !help to see everything I can do",
   "server": "irc.w3.org",
   "port": 6667,
   "channels": [
-    "#jazbot",
-    "#ectest5 jaztest"
+    "#jazbot"
   ],
   "ignore": [],
-  "lastfmapikey": "344c82f3551caf9189cf76653586219d",
-  "lyricsnmusicapikey": "f6b1c04a52616ac22a60ca9c8dfa15",
-  "authpass": "tim"
+  "lastfmapikey": "last.fm api key",
+  "lyricsnmusicapikey": "lyricsnmusic.com api key",
+  "authpass": "jazbotpass"
 }
