@@ -1,0 +1,57 @@
+Cards Against Humanity
+
+!cag start (admin)
+!cag stop (admin)
+!cag quit (player)
+!cag pause (admin)
+!cag answer 2 6 (player)
+
+Game Variables: 
+	Time remaining
+	Round number
+	Answers pile
+	Questions pile
+	Players
+
+- Phase 1
+	Game is initiated with 
+		!cag start -t 30 (30 minute timer) (default 0)
+		!cag start -p 20 (First to 20 points) (default 20)
+
+	Bot gathers all player names in channel, adds them to dictionary:
+		{"username":"Jazcash", "nickname", "points":0, "cardsinhand":[{"text":"blah blah blah"}], "turnsmissed": 2}
+	
+	Give every player 10 cards:
+		{"text":"blah blah blah"}
+
+- Phase 2
+
+	Round Variables:
+		Answers: {cards, "submittedBy":"Jazcash"}
+		Votes: {"Jazcash":2, "Tim":1 etc}
+
+	
+	PM every player their cards (numbered) and query them for their selection of answers:
+		!answer 1 4
+	
+	Validate if !answer is valid for each player
+	
+	Set a timer for 30 seconds and if by that point not all answers have been given then state: "Still waiting for answers from Jazcash, Leigh and Adam"
+	
+	Set a timer for 10 seconds and if by then there are still missing answers then force those players to submit random choices
+
+	If a player has missed 3 turns then eject them from the game and put their cards back into the answers pile
+
+	After all players have submitted answers or round timer is up then state all answers injected into the round question (numbered but in a random order) and ask each player to vote on their favourite answer (players can't vote for themselves)
+
+	Add up the votes and declare the favourite answer and player of said answer to everybody.
+	If there is more than one favourite then give all the favourites +1 points and declare all the answers
+
+	Add +1 to the round number
+
+	For each player, give them answer cards until their total number of cards is 10
+
+	Repeat Phase 2 until winning condition is met
+
+- Phase 3
+	Player with most points wins, delcare it to all players and end the game, reset variables etc

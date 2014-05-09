@@ -1,0 +1,28 @@
+Cards Against Humanity
+
+!cag start
+!cag stop
+
+- Phase 1
+	Game is initiated with 
+		!cag start -t 30 (30 minute timer)
+		!cag start -p 20 (First to 20 points)
+
+	Bot gathers all player names, adds them to dictionary:
+		{"name":"Jazcash", "points":0, "cardsinhand":[{"text":"blah blah blah"}]}
+	
+	Give every player 7 cards:
+		{"text":"blah blah blah"}
+
+- Phase 2
+	State a question card in main chat and whose turn it is
+	
+	PM every player their cards (numbered) and query them for their selection of answers:
+		!answer 1 4
+	
+	Validate if !answer is valid for each player
+	
+	Set a timer for 30 seconds and if by that point not all answers have been given then state: "Still waiting for answers from Jazcash, Leigh and Adam"
+	
+	Set a timer for 10 seconds and if by then there are still missing answers then force those players to submit random choices
+

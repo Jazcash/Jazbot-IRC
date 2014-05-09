@@ -1,0 +1,213 @@
+#ectest5 <Jazcash> hi dude
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> hi
+#ectest5 <Jazcash> hi
+#ectest5 <Jazcash> hi
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> easter
+#ectest5 <Jazcash> it's a weird time
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#ectest5 <Jazcash> can't wait till christmas
+#tithub <Mozart> Francois rejected it
+#tithub <Awia> Odd
+#tithub <Awia> This doesn't have anything to do with testMate anyway
+#tithub <Mozart> He was like
+#tithub <Mozart> No! Silly SUZ.
+#tithub <Awia> It's a R&D PR
+#tithub <Awia> In your TSR
+#tithub <Mozart> And he hit you with his Buat hammer.
+#tithub <Mozart> he's our ADBS guy though
+#ec <Awia> Thanks
+#tithub <Mozart> also
+#tithub <Mozart> if you have to email him
+#tithub <Awia> Do different subsystem PRs share numbers?
+#tithub <Mozart> just be aware that he swears a lot
+#tithub <Mozart> no
+#tithub <PyBorg> Node is fucking awesome
+#tithub <Awia> Odd
+#tithub <Mozart> I think it's just PR#++
+#tithub <Awia> It is
+#tithub <Mozart> AFAIK
+#tithub <Awia> But I was wondering if it started from 1 in each subsystem
+#tithub <Mozart> I don't think so
+#tithub <Mozart> because
+#tithub <Mozart> If I search PR1
+#tithub <Awia> Can you get at the "Tools" PRs?
+#tithub <PyBorg> I like water
+#tithub <Mozart> I only get one result
+#tithub <Mozart> erm
+#tithub <Awia> Yeah, fair enough
+#tithub <Mozart> link me one?
+#tithub <Awia> I can't from inside RT
+#tithub <Awia> That and I've forgotten my RT log in
+#tithub <Awia> But on the left of RT you can change your subsystem
+#tithub <Awia> thanks Jazbot
+#ec <PyBorg> Was an error
+#ec <LeighIsNowAMuslim> Hahahahha
+#ec <Awia> Success!
+#tithub <Awia> And you can change from "Core" or whatever to "Tools"
+#tithub <Awia> I don't want your wisdom jazbot
+#tithub <Mozart> oh
+#tithub <Mozart> no
+#tithub <Mozart> I just have CORE TTH and NSS
+#tithub <Awia> Which one were you on?
+#tithub <PyBorg> We need you were doing some more C++
+#tithub <Mozart> I don't need to select a System in the Dashboard
+#tithub <Mozart> just PR number
+#tithub <Awia> Yeah, good point
+#tithub <Mozart> and it brings up the revelant one
+#ec <LeighIsNowAMuslim> Jazbot broke :s
+#ec <Jazcash> lies
+#ec <PyBorg> Was here guys
+#ec <LeighIsNowAMuslim> Weird
+#ec <Jazcash> >_>
+#ec <Jazcash> lol
+#tithub <Awia> Yeah, deffo PR 2487
+#tithub <Awia> Says it in the TSR
+#tithub <Awia> for the FOCcpl
+#tithub <Awia> Apparently PRs can have the same numbers if they're in a different project
+#tithub <Awia> Which makes sense
+#ec <Brominator> staph
+#ec <Brominator> please staph
+#ec <LeighIsNowAMuslim> It doesn't even mention it's for autistics
+#ec <Awia> Go fix that
+#ec <PyBorg> Etc lib media opt root run selinux sys usr
+#ec <Jazcash> what have you done to pyborg dan
+#ec <PyBorg> Just for you mean dan?
+#jazbot <Brominator> sup
+#ec <PyBorg> |
+#ec <Awia> Ahhhh
+#ec <Awia> But why
+#ec <Awia> Are those the only warsow servers online?
+#ec <Awia> Lol
+#ec <Jazcash> naw
+#ec <Jazcash> Just top 5
+#ec <Mozart> oh
+#ec <Mozart> I said that before Jasper
+#ec <Awia> Top 5 servers contain only 2 people at most
+#ec <Awia> lol
+#ec <Awia> dead game
+#ec <Jazcash> Naw
+#ec <Jazcash> It's just that the only people that play it are people with lives
+#ec <LeighIsNowAMuslim> 2/16 "top 5"
+#ec <Jazcash> So they can only play it when they're back from work
+#ec <Awia> dead
+#ec <Awia> game
+#ec <LeighIsNowAMuslim> ded gaem
+#ec <Awia> for dead people
+#ec <LeighIsNowAMuslim> warsow disband
+#ec <Jazcash> pls stahp
+#ec <Jazcash> i might cut myself
+#ec <Jazcash> inb4 not stopping hahaha much jokes ur so funny i wish i was u hahaha
+#ec <LeighIsNowAMuslim> But you could be the 3rd person on the most popular Warsow server
+#ec <LeighIsNowAMuslim> Then you only need 13 more
+#ec <LeighIsNowAMuslim> That was probably submitted by jasper
+#ec <LeighIsNowAMuslim> (2 results) 2. Warsow = dead gaem
+#ec <Jazcash> that was probably submitted by you
+#ec <Jazcash> HISTORY
+#ec <Jazcash> UR HISTORY
+#ec <Awia> Heheh, Leigh is a girls name
+#ec <LeighIsNowAMuslim> Gaaaay
+#ec <PyBorg> 0 results 1
+#ec <Jazcash> As I was rimming the young girl's succulent pink starfish, I stopped and asked, "Did you perchance have mexican for dinner last night? I ask because my tongue is ablaze with spicy goodness." #
+#ec <Jazcash> Beautiful
+#ec <PyBorg> For sexual pleasure
+#ec <Jazcash> Luke's always rimming
+#ec <Awia> Your mum is always rimming
+#ec <LeighIsNowAMuslim> You gotta respect that
+#ec <Brominator> wat
+#ec <Awia> OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+#ec <Jazcash> gayyyy
+#ec <Jazcash> Yep
+#ec <Jazcash> Truth
+#ec <Jazcash> http://i.imgur.com/rlJsmwu.gif
+#ec <LeighIsNowAMuslim> http://starzday.com/wp-content/uploads/2012/08/Lady-Gaga18.jpg
+#ec <LeighIsNowAMuslim> maybe nsfw
+#ec <PyBorg> Maybe see you
+#ec <LeighIsNowAMuslim> depends how brave you are
+#ec <Jazcash> aw
+#ec <Jazcash> Need to reimplement that
+#ec <Awia> I'd pet that dog
+#ectest5 <Awia> ok, now what?
+#ectest5 <Jazcash> >_>
+#ectest5 <Jazcash> <_<
+#ec <PyBorg> You mean large companies
+#ec <Mozart> Did someone say scat?
+#ec <Mozart> Mozart likey.
+#ec <PyBorg> Results 1
+#ec <Jazcash> Where's Luke today
+#ec <Awia> He's around
+#ec <Awia> Ring himm
+#ec <Jazcash> you ring him
+#ec <Jazcash> fgt
+#ec <Brominator> dem social skills
+#ectest5 <Jazcash> i am talking about
+#ectest5 <Jazcash> christmas
+#ectest5 <Jazcash> ur mum sucks dicks
+#ec <LeighIsNowAMuslim> woops
+#ec <Jazcash> http://i.imgur.com/HYpFZCP.gif
+#ectest5 <Jazcash> tell me about dogs
+#ectest5 <Jazcash> tell me about cats
+#ectest5 <Jazcash> tell me about pets
+#ectest5 <Jazcash> tell me about pet
+#ectest5 <Jazcash> tell me about pet
+#ec <LeighIsNowAMuslim> http://i.imgur.com/OYsMXWr.jpg
+#tithub <Mozart> Slaney
+#tithub <Mozart> yeah
+#tithub <Mozart> Well
+#tithub <Mozart> there's Slaney Slaney
+#tithub <Mozart> he's a dude upstairs
+#tithub <Mozart> a Stafford guy
+#tithub <Mozart> yeah
+#tithub <Mozart> he's in the office
+#tithub <Mozart> I see why he uses his last name now
+#tithub <Awia> Adilee is a cool name
+#tithub <PyBorg> Last name now
+#tithub <PyBorg> Have someone else lick your asshole for sexual pleasure
+#tithub <Awia> Anyway, Lunch time!
+#tithub <Awia> PYBOR!
+#tithub <Awia> What are these Jazbot quotes from?
+#tithub <LeighIsNowAMuslim> People call him Slaney or just Lee
+#tithub <LeighIsNowAMuslim> THe internet
+#ec <Brominator> Thank link was not what I expected from Leigh
+#ec <Brominator> *That
+#tithub <Jazcash> From here adam: https://raw.githubusercontent.com/Jazcash/Jazbot/master/lib/quotes.json
+#ec <LeighIsNowAMuslim> "I would eat the sweetcorn out of her shit"
+#ec <Brominator> lol
+#tithub <Awia> They're really stupid
+#tithub <Awia> Is that the point?
+#tithub <Jazcash> They're just quotes
+#tithub <Jazcash> It's supposed to be annoying and stupid
+#tithub <Jazcash> Idk about the quotes themselves
+#tithub <Awia> Good
+#tithub <Awia> Because they are annoying and stupid
+#tithub <Awia> I'm glad we're on the same page
+#tithub <LeighIsNowAMuslim> Wow
+#tithub <LeighIsNowAMuslim> Such power abuse
+#tithub <PyBorg> Of its ability to be fair
+#tithub <Mozart> Gay
+#tithub <Awia> You don't even have the quoted atributed
+#tithub <Awia> Bad form
+#tithub <Mozart> #rekt
+#tithub <LeighIsNowAMuslim> ikr
+#tithub <LeighIsNowAMuslim> Dickbot would've been way better
+#tithub <LeighIsNowAMuslim> Not like Jazbot
+#tithub <LeighIsNowAMuslim> The names say it all
+#tithub <Mozart> why doesn't /list work on this server?
+#tithub <Mozart> Am I doing it wrong?
+#tithub <LeighIsNowAMuslim> Imagine a bot called Jazbot
+#tithub <LeighIsNowAMuslim> Works for me
+#ectest5 <Jazcash> yo
+#ectest5 <Jazcash> christmas
+#ectest5 <Jazcash> christmas
+#ectest5 <Jazcash> christmas
+Jazbot <Jazcash> hello
