@@ -211,3 +211,18 @@
 #ectest5 <Jazcash> christmas
 #ectest5 <Jazcash> christmas
 Jazbot <Jazcash> hello
+#ectest6 <Jazbot> 4There was an uncaught error in the command '!test', please see the console
+#ectest6 <Jazbot1> yo
+#ectest6 <Jazbot1> yo
+#ectest6 <Jazbot> yo
+#ectest6 <Jazbot1> 6Hello Jazcash!
+#ectest6 <Jazbot4> 6Hello Jazcash!
+#ectest6 <Jazbot1> 6Hello Jazcash!
+#ectest6 <Jazbot3> 6Hello Jazcash!
+#ectest6 <Jazbot1> 6Hello Jazcash!
+#ectest6 <Jazbot4> 6Hello Jazcash!
+#ectest6 <Jazbot3> 6Hello Jazcash!
+#ectest6 <Jazbot1> 6Hello Jazcash!
+#ectest6 <Jazbot4> 6Hello Jazcash!
+#ectest6 <Jazbot3> 6Hello Jazcash!
+#ectest6 <Jazbot3> 6Hello Jazcash!
