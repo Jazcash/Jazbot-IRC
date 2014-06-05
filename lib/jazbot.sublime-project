@@ -1,0 +1,36 @@
+{
+	"build_systems":
+	[
+		{
+			"name": "jazbot",
+			"shell_cmd": "node jazbot.js"
+		}
+	],
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "lib"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "."
+		},
+		{
+			"follow_symlinks": true,
+			"path": "cmds"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "data"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "msgHandles"
+		}
+	],
+	"settings":
+	{
+		"tab_size": 2
+	}
+}
